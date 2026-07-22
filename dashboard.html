@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>이은경국어 - 피드백 관리</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --primary: #4338CA; --primary-bg: #EEF2FF; --ink: #111827; --text-muted: #6B7280;
+    --bg: #F3F4F6; --surface: #FFFFFF; --border: #E5E7EB;
+    --danger-bg: #FEF2F2; --danger-text: #991B1B; --danger-border: #FECACA;
+    --ok-bg: #ECFDF5; --ok-text: #065F46; --ok-border: #A7F3D0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Pretendard Variable", Pretendard, -apple-system, sans-serif; background: var(--bg); color: var(--ink); padding: 24px; line-height: 1.5; }
+  @media (max-width: 768px) { body { padding: 14px; } }
+  .wrap { max-width: 1040px; margin: 0 auto; }
+  button { font-family: inherit; cursor: pointer; }
+  input, textarea { font-family: inherit; }
+
+  .lock { max-width: 340px; margin: 14vh auto; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 32px 28px; text-align: center; }
+  .lock h1 { font-size: 17px; font-weight: 800; margin-bottom: 6px; }
+  .lock p { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+  .lock input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 16px; text-align: center; letter-spacing: 4px; background: #F9FAFB; margin-bottom: 12px; }
+  .lock input:focus { outline: none; border-color: var(--primary); background: #fff; }
+  .lock .err { color: var(--danger-text); font-size: 13px; font-weight: 600; margin-bottom: 12px; display: none; }
+
+  .topbar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+  .topbar h1 { font-size: 20px; font-weight: 800; }
+  .weeknav { display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap; }
+  .weeknav button { border: 1px solid var(--border); background: var(--surface); border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 700; color: var(--text-muted); }
+  .weeknav button.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+  .statusbar { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; font-size: 14px; }
+  .statusbar .spacer { margin-left: auto; display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn { padding: 10px 16px; border-radius: 8px; font-size: 13.5px; font-weight: 700; border: 1px solid var(--border); background: var(--surface); color: var(--ink); }
+  .btn:hover { background: #F9FAFB; }
+  .btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .btn.primary:hover { background: #3730A3; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  .unreg { border-radius: 16px; padding: 18px 20px; margin-bottom: 18px; display: none; background: var(--danger-bg); border: 1px solid var(--danger-border); }
+  .unreg.clear { background: var(--ok-bg); border-color: var(--ok-border); }
+  .unreg-title { font-size: 15px; font-weight: 800; color: var(--danger-text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .unreg.clear .unreg-title { color: var(--ok-text); }
+  .unreg-title .cnt { background: #fff; padding: 2px 10px; border-radius: 12px; font-size: 13px; border: 1px solid var(--danger-border); }
+  .unreg-title .btn { margin-left: auto; padding: 6px 12px; font-size: 12.5px; }
+  .unreg-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .unreg-tag { background: #fff; border: 1px solid var(--danger-border); color: var(--danger-text); padding: 6px 12px; border-radius: 8px; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: .15s; font-family: inherit; }
+  .unreg-tag:hover { background: var(--danger-text); color: #fff; border-color: var(--danger-text); }
+  .unreg-tag:hover i { color: rgba(255,255,255,.7); }
+  .unreg-hint { font-size: 12px; color: #A87070; margin-top: 11px; }
+  .unreg-tag i { font-style: normal; color: #C08484; font-size: 12px; margin-left: 5px; }
+
+  #exportArea { background: var(--bg); padding: 14px; border-radius: 20px; }
+  .export-title { text-align: center; font-size: 21px; font-weight: 800; margin-bottom: 18px; display: none; }
+  .board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; align-items: start; }
+  @media (max-width: 860px) { .board { grid-template-columns: 1fr; } }
+  .col { background: var(--surface); border-radius: 16px; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,.02); }
+  .col-header { padding: 14px 16px; font-size: 15.5px; font-weight: 800; color: #fff; background: var(--primary); display: flex; justify-content: space-between; align-items: center; }
+  .col-header .badge { background: rgba(255,255,255,.22); padding: 2px 9px; border-radius: 12px; font-size: 12px; }
+  .col.dim .col-header { background: #9CA3AF; }
+  .slot-list { padding: 14px 16px 16px; }
+  .slot { margin-bottom: 16px; }
+  .slot:last-child { margin-bottom: 0; }
+  .slot-time { font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 9px; padding-bottom: 5px; border-bottom: 1px dashed var(--border); display: flex; justify-content: space-between; }
+  .slot-time .count { font-weight: 800; color: var(--primary); }
+  .slot-time .count.full { color: var(--danger-text); }
+  .student-tags { display: flex; flex-wrap: wrap; gap: 7px; }
+  .student-tag { background: #F3F4F6; border: 1px solid var(--border); padding: 6px 10px; border-radius: 8px; font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .student-tag em { font-style: normal; color: var(--text-muted); font-size: 11.5px; }
+  .student-tag .x { border: none; background: none; color: #C4C7CC; font-size: 15px; line-height: 1; padding: 0 0 0 2px; }
+  .student-tag .x:hover { color: var(--danger-text); }
+  .student-note { flex-basis: 100%; font-size: 12px; color: var(--text-muted); padding: 2px 2px 4px; }
+  .empty-slot { font-size: 13px; color: #9CA3AF; font-style: italic; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 18px; display: none; }
+  .panel.open { display: block; }
+  .panel h2 { font-size: 15.5px; font-weight: 800; margin-bottom: 6px; }
+  .panel p.desc { font-size: 13px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.65; }
+  .panel textarea { width: 100%; height: 170px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 13.5px; background: #F9FAFB; resize: vertical; line-height: 1.7; }
+  .panel textarea:focus { outline: none; border-color: var(--primary); background: #fff; }
+  .panel-actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+  .file-label { padding: 10px 16px; border-radius: 8px; font-size: 13.5px; font-weight: 700; border: 1px solid var(--border); background: var(--surface); cursor: pointer; display: inline-block; }
+  .file-label:hover { background: #F9FAFB; }
+
+  .toast { position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 12px); background: var(--ink); color: #fff; padding: 12px 20px; border-radius: 999px; font-size: 13.5px; font-weight: 700; opacity: 0; pointer-events: none; transition: .24s; z-index: 90; }
+  .toast.on { opacity: 1; transform: translate(-50%, 0); }
+  .footer-note { text-align: center; margin-top: 22px; font-size: 12px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<div class="lock" id="lock">
+  <h1>피드백 관리</h1>
+  <p>비밀번호를 입력해주세요.</p>
+  <div class="err" id="lockErr">비밀번호가 맞지 않습니다.</div>
+  <input type="password" id="pinInput" inputmode="numeric" placeholder="••••" maxlength="16">
+  <button class="btn primary" id="btnUnlock" style="width:100%;padding:14px">들어가기</button>
+</div>
+
+<div class="wrap" id="main" style="display:none">
+  <div class="topbar">
+    <h1>피드백 예약 현황</h1>
+    <div class="weeknav" id="weekNav"></div>
+  </div>
+
+  <div class="statusbar">
+    <span id="statusText">불러오는 중…</span>
+    <span class="spacer">
+      <button class="btn" id="btnRoster">학생 명부</button>
+      <button class="btn" id="btnExport">시간표 이미지 저장</button>
+      <button class="btn primary" id="btnFetch">새로고침</button>
+    </span>
+  </div>
+
+  <div class="panel" id="rosterPanel">
+    <h2>전체 원생 명단</h2>
+    <p class="desc">
+      한 줄에 한 명씩, <b>이름, 학년</b> 순서로 입력합니다.
+      이 명단과 예약 현황을 대조해서 아직 시간을 안 잡은 학생을 찾아냅니다.
+      <b>연락처는 넣지 마세요</b> — 시트가 외부에 노출될 수 있어 이름과 학년만 저장합니다.
+    </p>
+    <textarea id="rosterTa" placeholder="홍길동, 고2&#10;김국어, 중3"></textarea>
+    <div class="panel-actions">
+      <button class="btn primary" id="btnRosterSave">명부 저장</button>
+      <label class="file-label" for="excelUpload">엑셀에서 불러오기</label>
+      <input type="file" id="excelUpload" accept=".xlsx,.xls,.csv" style="display:none">
+      <button class="btn" id="btnRosterClose" style="margin-left:auto">닫기</button>
+    </div>
+  </div>
+
+  <div class="unreg" id="unregBox">
+    <div class="unreg-title">
+      <span id="unregLabel">아직 예약하지 않은 학생</span>
+      <span class="cnt" id="unregCount">0명</span>
+      <button class="btn" id="btnUnregCopy">전체 문구 복사</button>
+    </div>
+    <div class="unreg-list" id="unregList"></div>
+    <div class="unreg-hint" id="unregHint"></div>
+  </div>
+
+  <div id="exportArea">
+    <div class="export-title" id="exportTitle">이번 주 국어 피드백 시간표</div>
+    <div class="board" id="board"></div>
+  </div>
+
+  <div class="footer-note">이은경국어 피드백 예약 관리</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════ 설정 ═══════════════ */
+const SHEETDB      = "https://sheetdb.io/api/v1/bojbvwmxq4dyv";
+const ROSTER_SHEET = "명부";          // 스프레드시트의 두 번째 탭 이름
+const PASSWORD     = "2545";          // ← 원하는 비밀번호로 바꾸세요
+const WEEKS        = 3;
+
+/* index.html 의 SLOTS 와 반드시 동일하게 유지하세요 */
+const SLOTS = [
+  { id: "tue15", dow: 2, day: "화요일", start: "15:00", end: "17:00", cap: 9 },
+  { id: "fri17", dow: 5, day: "금요일", start: "17:00", end: "19:00", cap: 9 },
+  { id: "sat13", dow: 6, day: "토요일", start: "13:00", end: "15:00", cap: 9 },
+  { id: "sat15", dow: 6, day: "토요일", start: "15:00", end: "17:00", cap: 9 }
+];
+const BOOKING_URL = location.href.replace(/[^/]*$/, "");
+
+/* ═══════════════ 유틸 ═══════════════ */
+const $ = s => document.querySelector(s);
+const DOW = ["일","월","화","수","목","금","토"];
+const pad = n => String(n).padStart(2, "0");
+const ymd = d => d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate());
+const parseYmd = s => { const p = String(s).split("-"); return new Date(+p[0], +p[1]-1, +p[2]); };
+const addDays = (d, n) => { const x = new Date(d.getTime()); x.setDate(x.getDate()+n); return x; };
+const esc = s => String(s||"").replace(/[<>&]/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]));
+
+function mondayOf(d) {
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const w = x.getDay();
+  return addDays(x, w === 0 ? -6 : 1 - w);
+}
+function toast(msg) {
+  const t = $("#toast"); t.textContent = msg; t.classList.add("on");
+  clearTimeout(t._tm); t._tm = setTimeout(() => t.classList.remove("on"), 2400);
+}
+
+/* ═══════════════ SheetDB ═══════════════ */
+async function sdbGetAll(sheet) {
+  const url = SHEETDB + (sheet ? "?sheet=" + encodeURIComponent(sheet) : "");
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) throw new Error("조회 실패");
+  const j = await res.json();
+  return Array.isArray(j) ? j : [];
+}
+async function sdbDelete(id) {
+  const res = await fetch(SHEETDB + "/id/" + encodeURIComponent(id), { method: "DELETE" });
+  if (!res.ok) throw new Error("삭제 실패");
+  return await res.json();
+}
+async function sdbReplaceRoster(list) {
+  const q = "?sheet=" + encodeURIComponent(ROSTER_SHEET);
+  await fetch(SHEETDB + "/all" + q, { method: "DELETE" });
+  if (list.length) {
+    const res = await fetch(SHEETDB + q, {
+      method: "POST",
+      headers: { "Accept": "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({ data: list.map(s => ({ "이름": s.name, "학년": s.grade })) })
+    });
+    if (!res.ok) throw new Error("명부 저장 실패");
+  }
+}
+
+/* ═══════════════ 상태 ═══════════════ */
+let allRows = [], roster = [], rosterMode = "sheet";
+let weeks = [], curWeek = "";
+
+const weekRows = () => allRows.filter(r => r["주차"] === curWeek);
+const capOf = id => (SLOTS.find(s => s.id === id) || {}).cap || 9;
+const slotDate = (week, dow) => ymd(addDays(parseYmd(week), dow - 1));
+const sameStudent = (r, st) =>
+  String(r["이름"]||"").trim() === st.name && String(r["학년"]||"").trim() === st.grade;
+
+/* ═══════════════ 렌더 ═══════════════ */
+function renderWeekNav() {
+  $("#weekNav").innerHTML = weeks.map((w, i) => {
+    const d = parseYmd(w);
+    const label = i === 0 ? "이번 주" : (i === 1 ? "다음 주" : i + "주 뒤");
+    return '<button class="' + (w === curWeek ? "on" : "") + '" data-week="' + w + '">' + label
+      + '<span style="opacity:.7;font-weight:600"> ' + (d.getMonth()+1) + '/' + d.getDate() + '</span></button>';
+  }).join("");
+}
+
+function renderBoard() {
+  const rows = weekRows();
+  const byDow = {};
+  SLOTS.forEach(s => { (byDow[s.dow] = byDow[s.dow] || []).push(s); });
+
+  $("#board").innerHTML = Object.keys(byDow).sort((a,b) => a-b).map(dow => {
+    const list = byDow[dow];
+    const d = parseYmd(slotDate(curWeek, +dow));
+    const total = list.reduce((n, s) => n + rows.filter(r => r["슬롯"] === s.id).length, 0);
+    const past = d.getTime() < new Date().setHours(0,0,0,0);
+
+    const slotsHtml = list.map(s => {
+      const rr = rows.filter(r => r["슬롯"] === s.id);
+      const cap = capOf(s.id);
+      const tags = rr.length
+        ? rr.map(r => '<div class="student-tag">' + esc(r["이름"]) + '<em>' + esc(r["학년"]) + '</em>'
+            + '<button class="x" data-del="' + esc(r["id"]) + '" title="예약 취소">×</button></div>'
+            + (r["요청사항"] ? '<div class="student-note">└ ' + esc(r["요청사항"]) + '</div>' : "")).join("")
+        : '<div class="empty-slot">예약 없음</div>';
+      return '<div class="slot"><div class="slot-time"><span>' + s.start + ' ~ ' + s.end + '</span>'
+        + '<span class="count' + (rr.length >= cap ? " full" : "") + '">' + rr.length + ' / ' + cap + '명</span></div>'
+        + '<div class="student-tags">' + tags + '</div></div>';
+    }).join("");
+
+    return '<div class="col' + (past ? " dim" : "") + '">'
+      + '<div class="col-header"><span>' + list[0].day + ' · ' + (d.getMonth()+1) + '/' + d.getDate() + '</span>'
+      + '<span class="badge">' + total + '명</span></div>'
+      + '<div class="slot-list">' + slotsHtml + '</div></div>';
+  }).join("");
+}
+
+/* 학생 한 명에게 보낼 안내 문구 */
+function unregMsg(name) {
+  const d = parseYmd(curWeek), e = addDays(d, 6);
+  return "[이은경국어] 피드백 예약 안내\n\n"
+    + "'" + name + "' 학생.\n"
+    + (d.getMonth()+1) + "/" + d.getDate() + "~" + (e.getMonth()+1) + "/" + e.getDate()
+    + " 주 피드백 시간이 아직 정해지지 않았습니다.\n"
+    + "아래 링크에서 원하는 날짜와 시간을 선택해주세요.\n"
+    + BOOKING_URL;
+}
+
+function renderUnreg() {
+  const box = $("#unregBox");
+  if (!roster.length) { box.style.display = "none"; return; }
+  const rows = weekRows();
+  const miss = roster.filter(st => !rows.some(r => sameStudent(r, st)));
+
+  box.style.display = "block";
+  $("#unregCount").textContent = miss.length + "명";
+  if (!miss.length) {
+    box.classList.add("clear");
+    $("#unregLabel").textContent = "모든 학생이 예약을 완료했습니다";
+    $("#unregList").innerHTML = "";
+    $("#unregHint").textContent = "";
+    $("#btnUnregCopy").style.display = "none";
+  } else {
+    box.classList.remove("clear");
+    $("#unregLabel").textContent = "아직 예약하지 않은 학생";
+    $("#btnUnregCopy").style.display = "";
+    $("#unregList").innerHTML = miss.map(st =>
+      '<button class="unreg-tag" data-copy="' + esc(st.name) + '">' + esc(st.name)
+      + (st.grade ? '<i>' + esc(st.grade) + '</i>' : "") + '</button>').join("");
+    $("#unregHint").textContent = "이름을 누르면 그 학생에게 보낼 문구가 복사됩니다.";
+  }
+}
+
+function renderStatus() {
+  const d = parseYmd(curWeek), e = addDays(d, 6);
+  const rows = weekRows();
+  let t = (d.getMonth()+1) + "/" + d.getDate() + " – " + (e.getMonth()+1) + "/" + e.getDate()
+        + " · 예약 <b>" + rows.length + "건</b>";
+  if (roster.length) {
+    const done = roster.filter(st => rows.some(r => sameStudent(r, st))).length;
+    t += " · 명부 " + roster.length + "명 중 <b>" + done + "명</b> 완료";
+  }
+  if (rosterMode === "local") t += ' <span style="color:var(--text-muted)">(명부는 이 컴퓨터에만 저장됨)</span>';
+  $("#statusText").innerHTML = t;
+}
+
+function renderAll() { renderWeekNav(); renderBoard(); renderUnreg(); renderStatus(); }
+
+/* ═══════════════ 로드 ═══════════════ */
+async function loadRoster() {
+  try {
+    const j = await sdbGetAll(ROSTER_SHEET);
+    rosterMode = "sheet";
+    return j.map(r => ({ name: String(r["이름"]||"").trim(), grade: String(r["학년"]||"").trim() }))
+            .filter(r => r.name);
+  } catch (e) {
+    rosterMode = "local";
+    try { return JSON.parse(localStorage.getItem("ek_roster") || "[]"); } catch (_) { return []; }
+  }
+}
+
+async function load() {
+  const btn = $("#btnFetch");
+  btn.disabled = true; btn.textContent = "불러오는 중…";
+  try {
+    const [rows, rst] = await Promise.all([sdbGetAll(), loadRoster()]);
+    allRows = rows;
+    roster = rst;
+    $("#rosterTa").value = roster.map(s => [s.name, s.grade].filter(Boolean).join(", ")).join("\n");
+    renderAll();
+    return true;
+  } catch (e) {
+    toast("불러오지 못했습니다. 잠시 후 다시 시도해주세요.");
+    return false;
+  } finally {
+    btn.disabled = false; btn.textContent = "새로고침";
+  }
+}
+
+/* ═══════════════ 이벤트 ═══════════════ */
+function unlock() {
+  const v = $("#pinInput").value.trim();
+  if (v !== PASSWORD) {
+    $("#lockErr").style.display = "block";
+    $("#pinInput").value = "";
+    sessionStorage.removeItem("ek_pw");
+    return;
+  }
+  sessionStorage.setItem("ek_pw", v);
+  $("#lock").style.display = "none";
+  $("#main").style.display = "block";
+
+  const mon = mondayOf(new Date());
+  weeks = [];
+  for (let i = 0; i < WEEKS; i++) weeks.push(ymd(addDays(mon, i*7)));
+  curWeek = weeks[0];
+  load();
+}
+$("#btnUnlock").addEventListener("click", unlock);
+$("#pinInput").addEventListener("keydown", e => { if (e.key === "Enter") unlock(); });
+
+$("#weekNav").addEventListener("click", e => {
+  const b = e.target.closest("[data-week]");
+  if (!b) return;
+  curWeek = b.getAttribute("data-week");
+  renderAll();
+});
+
+$("#btnFetch").addEventListener("click", load);
+
+$("#board").addEventListener("click", async e => {
+  const b = e.target.closest("[data-del]");
+  if (!b) return;
+  if (!confirm("이 학생의 예약을 취소할까요?")) return;
+  try {
+    await sdbDelete(b.getAttribute("data-del"));
+    toast("취소했습니다");
+    load();
+  } catch (err) { toast("취소하지 못했습니다"); }
+});
+
+$("#btnRoster").addEventListener("click", () => $("#rosterPanel").classList.toggle("open"));
+$("#btnRosterClose").addEventListener("click", () => $("#rosterPanel").classList.remove("open"));
+
+$("#btnRosterSave").addEventListener("click", async () => {
+  const list = $("#rosterTa").value.split("\n").map(ln => {
+    const c = ln.split(/[,\t]/).map(x => x.trim());
+    if (!c[0]) return null;
+    return { name: c[0], grade: c[1] || "" };
+  }).filter(Boolean);
+
+  const btn = $("#btnRosterSave");
+  btn.disabled = true; btn.textContent = "저장 중…";
+  try {
+    await sdbReplaceRoster(list);
+    localStorage.setItem("ek_roster", JSON.stringify(list));
+    rosterMode = "sheet";
+    toast(list.length + "명 저장했습니다");
+  } catch (e) {
+    localStorage.setItem("ek_roster", JSON.stringify(list));
+    rosterMode = "local";
+    toast("시트 저장에 실패해 이 컴퓨터에만 저장했습니다");
+  } finally {
+    btn.disabled = false; btn.textContent = "명부 저장";
+    roster = list;
+    $("#rosterPanel").classList.remove("open");
+    renderAll();
+  }
+});
+
+$("#unregList").addEventListener("click", e => {
+  const b = e.target.closest("[data-copy]");
+  if (!b) return;
+  const name = b.getAttribute("data-copy");
+  navigator.clipboard && navigator.clipboard.writeText(unregMsg(name))
+    .then(() => toast(name + " 학생 문구를 복사했습니다"));
+});
+
+$("#btnUnregCopy").addEventListener("click", () => {
+  const rows = weekRows();
+  const miss = roster.filter(st => !rows.some(r => sameStudent(r, st)));
+  const t = miss.map(st => unregMsg(st.name)).join("\n\n─────────────\n\n");
+  navigator.clipboard && navigator.clipboard.writeText(t)
+    .then(() => toast(miss.length + "명분 문구를 복사했습니다"));
+});
+
+/* 엑셀 — '이름' 열을 찾아 그 열만 읽습니다 */
+$("#excelUpload").addEventListener("change", function (e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const wb = XLSX.read(new Uint8Array(ev.target.result), { type: "array" });
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
+
+      let hIdx = -1, cName = -1, cGrade = -1;
+      for (let i = 0; i < Math.min(rows.length, 10); i++) {
+        const r = (rows[i] || []).map(c => String(c || "").trim());
+        const n = r.findIndex(c => /이름|성명|학생/.test(c));
+        if (n > -1) { hIdx = i; cName = n; cGrade = r.findIndex(c => /학년|과정|반/.test(c)); break; }
+      }
+
+      let list = [];
+      if (hIdx > -1) {
+        for (let i = hIdx + 1; i < rows.length; i++) {
+          const r = rows[i] || [];
+          const name = String(r[cName] || "").trim();
+          if (!name) continue;
+          list.push({ name, grade: cGrade > -1 ? String(r[cGrade] || "").trim() : "" });
+        }
+      } else {
+        const SKIP = ["이름","성명","학년","연락처","전화","번호","비고","학생","구분","과정","반","순번"];
+        const seen = new Set();
+        rows.forEach(r => (r || []).forEach(c => {
+          const v = String(c || "").trim();
+          if (/^[가-힣]{2,4}$/.test(v) && SKIP.indexOf(v) === -1 && !seen.has(v)) {
+            seen.add(v); list.push({ name: v, grade: "" });
+          }
+        }));
+      }
+
+      if (!list.length) { toast("이름을 찾지 못했습니다"); return; }
+      $("#rosterTa").value = list.map(s => [s.name, s.grade].filter(Boolean).join(", ")).join("\n");
+      $("#rosterPanel").classList.add("open");
+      toast(list.length + "명 불러왔습니다. 확인 후 저장하세요");
+    } catch (err) {
+      toast("엑셀을 읽지 못했습니다");
+    }
+    $("#excelUpload").value = "";
+  };
+  reader.readAsArrayBuffer(file);
+});
+
+/* 이미지 저장 */
+$("#btnExport").addEventListener("click", function () {
+  const area = $("#exportArea"), title = $("#exportTitle"), btn = this;
+  const orig = btn.textContent;
+  btn.textContent = "저장 중…"; btn.disabled = true;
+  const d = parseYmd(curWeek), e = addDays(d, 6);
+  title.textContent = (d.getMonth()+1) + "/" + d.getDate() + " – " + (e.getMonth()+1) + "/" + e.getDate() + " 국어 피드백 시간표";
+  title.style.display = "block";
+  document.querySelectorAll(".student-tag .x").forEach(x => x.style.display = "none");
+
+  html2canvas(area, { scale: 2, backgroundColor: "#F3F4F6", useCORS: true }).then(canvas => {
+    const a = document.createElement("a");
+    a.download = "피드백시간표_" + curWeek + ".png";
+    a.href = canvas.toDataURL("image/png");
+    a.click();
+  }).catch(() => toast("이미지를 저장하지 못했습니다"))
+    .then(() => {
+      title.style.display = "none";
+      document.querySelectorAll(".student-tag .x").forEach(x => x.style.display = "");
+      btn.textContent = orig; btn.disabled = false;
+    });
+});
+
+/* 세션 유지 */
+(function boot() {
+  const saved = sessionStorage.getItem("ek_pw");
+  if (saved) { $("#pinInput").value = saved; unlock(); }
+  else $("#pinInput").focus();
+})();
+</script>
+</body>
+</html>

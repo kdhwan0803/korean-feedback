@@ -4,6 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>이은경국어 - 주간 피드백 예약</title>
+
+<!-- ★ 카톡·문자로 링크를 보낼 때 보이는 카드 정보 ★
+     사이트 주소를 바꾸면 아래 og:url 과 og:image 주소를 반드시 같이 바꾸세요. -->
+<meta name="description" content="원하는 날짜와 시간을 직접 선택하세요. 남은 자리를 확인하고 바로 예약할 수 있습니다.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="이은경국어">
+<meta property="og:url" content="https://kdhwan0803.github.io/korean-feedback/">
+<meta property="og:title" content="이은경국어 주간 피드백 예약">
+<meta property="og:description" content="원하는 날짜와 시간을 직접 선택하세요. 남은 자리를 확인하고 바로 예약할 수 있습니다.">
+<meta property="og:image" content="https://kdhwan0803.github.io/korean-feedback/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 <!-- 카카오톡 공유 API 스크립트 추가 -->
 <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.6.0/kakao.min.js"></script>
@@ -119,7 +132,7 @@
     </div>
     <div class="cal-box">
       <div class="t">잊지 않도록 기록해두세요</div>
-      <div class="d">시작 1시간 전에 휴대폰이 알려줍니다.</div>
+      <div class="d">카톡은 대화 상대 창에서 <b>'나와의 채팅'</b>을 고르면 메모처럼 남습니다.<br>캘린더에 넣으면 시작 1시간 전에 알려줍니다.</div>
       <div class="cal-btns">
         <button type="button" class="btn-cal kakao" id="btnKakaoMy">카톡 내게쓰기</button>
         <button type="button" class="btn-cal" data-cal="google">구글 캘린더</button>
@@ -137,7 +150,7 @@
     <div class="ticket" id="doneTicket"></div>
     <div class="cal-box">
       <div class="t">잊지 않도록 기록해두세요</div>
-      <div class="d">시작 1시간 전에 휴대폰이 알려줍니다.</div>
+      <div class="d">카톡은 대화 상대 창에서 <b>'나와의 채팅'</b>을 고르면 메모처럼 남습니다.<br>캘린더에 넣으면 시작 1시간 전에 알려줍니다.</div>
       <div class="cal-btns">
         <button type="button" class="btn-cal kakao" id="btnKakaoDone">카톡 내게쓰기</button>
         <button type="button" class="btn-cal" data-cal="google">구글 캘린더</button>
@@ -211,11 +224,15 @@
 /* ═══════════════ 설정 ═══════════════ */
 const SHEETDB = "https://sheetdb.io/api/v1/bojbvwmxq4dyv";
 
-// 🚨 컴퓨터에서 열 때 화면이 멈추는 것을 방지하는 안전 코드
+// ★ 카카오 JavaScript 키 — 여기 한 곳만 고치면 됩니다
+//   카카오 개발자사이트 > 내 애플리케이션 > 앱 키 > JavaScript 키
+const KAKAO_KEY = "13fea0afda0d162b265b714fbe9d8594";
+
+// 컴퓨터나 오프라인에서 열 때 화면이 멈추지 않도록 감싸둡니다
 try {
-  Kakao.init('13fea0afda0d162b265b714fbe9d8594'); 
-} catch(e) {
-  console.log("로컬 환경에서는 카카오 API가 비활성화됩니다.");
+  Kakao.init(KAKAO_KEY);
+} catch (e) {
+  console.log("카카오 SDK를 불러오지 못했습니다. 카톡 버튼만 동작하지 않습니다.");
 }
 
 const SLOTS = [
@@ -427,9 +444,9 @@ function sendKakao(info) {
   // 2. 초기화가 안 되어 있다면 버튼 누를 때 강제로 초기화 실행!
   if (!Kakao.isInitialized()) {
     try {
-      Kakao.init('00ed2cec5f052373917a9148a498f909'); 
+      Kakao.init(KAKAO_KEY);
     } catch (e) {
-      alert("카카오 초기화 실패: " + e.message);
+      alert("카카오톡 연결에 실패했습니다. 아래 캘린더 버튼을 이용해주세요.");
       return;
     }
   }
@@ -450,7 +467,8 @@ function sendKakao(info) {
       buttonTitle: '내 예약 확인하기'
     });
   } catch (error) {
-    alert("카카오 발송 실패원인: " + error.message);
+    alert("카카오톡을 열지 못했습니다. 아래 캘린더 버튼을 이용해주세요.");
+    console.error(error);
   }
 }
 

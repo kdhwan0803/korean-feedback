@@ -114,6 +114,30 @@
 
   .alert { padding: 12px 14px; border-radius: 10px; font-size: 13.5px; font-weight: 600; margin-bottom: 14px; display: none; text-align: left; background: #FEF2F2; color: var(--danger); border: 1px solid #FECACA; }
   .loading { text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 14px; }
+
+  .picked-banner { background: var(--primary-bg); border: 1px solid #C7D2FE; border-radius: 12px; padding: 14px 16px; }
+  .picked-banner .pl { font-size: 11.5px; font-weight: 800; letter-spacing: .1em; color: var(--primary); margin-bottom: 4px; }
+  .picked-banner .pv { font-size: 16px; font-weight: 800; color: var(--ink); }
+  .notice { background: var(--surface); margin: 12px 16px; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+  .notice-head { background: var(--primary); color: #fff; padding: 18px 20px; }
+  .notice-head h2 { font-size: 16.5px; font-weight: 800; line-height: 1.45; }
+  .notice-head p { font-size: 13px; margin-top: 7px; opacity: .92; line-height: 1.5; }
+  .notice-body { padding: 6px 20px 18px; }
+  .nblock { padding: 15px 0; border-bottom: 1px dashed var(--border); }
+  .nblock:last-child { border-bottom: none; }
+  .nblock .k { font-size: 12.5px; font-weight: 800; color: var(--primary); letter-spacing: .02em; margin-bottom: 8px; }
+  .nblock .v { font-size: 14px; color: var(--ink); line-height: 1.6; }
+  .nblock .v .step-flow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .nblock .v .chip { background: var(--primary-bg); color: var(--primary); font-weight: 700; font-size: 13px; padding: 5px 11px; border-radius: 8px; white-space: nowrap; }
+  .nblock .v .arrow { color: #9CA3AF; font-weight: 700; }
+  .nblock .v .times { display: flex; flex-wrap: wrap; gap: 8px; }
+  .nblock .v .time-pill { border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; font-weight: 700; font-size: 13.5px; }
+  .cautions { list-style: none; padding: 0; margin: 0; }
+  .cautions li { position: relative; padding-left: 18px; font-size: 13.5px; color: var(--text-muted); line-height: 1.6; margin-bottom: 9px; }
+  .cautions li:last-child { margin-bottom: 0; }
+  .cautions li::before { content: "•"; position: absolute; left: 3px; color: var(--primary); font-weight: 800; }
+  .cautions li b { color: var(--danger); font-weight: 700; }
+  .cautions li em { font-style: normal; color: var(--ink); font-weight: 600; }
 </style>
 </head>
 <body>
@@ -162,33 +186,55 @@
   </div>
 
   <div id="screenForm">
-    <div class="section" id="step1">
-      <div class="sec-title"><span class="step">1</span> 학생 정보를 입력해주세요</div>
-      <div class="alert" id="err1"></div>
-      <div class="input-group">
-        <label for="fName">학생 이름</label>
-        <input type="text" id="fName" placeholder="예: 홍길동" autocomplete="name">
+    <div class="notice">
+      <div class="notice-head">
+        <h2>방학기간 피드백 선착순 수강신청</h2>
+        <p>원하는 시간에 신청할 수 있도록 미리 ‘알람’을 맞춰 두세요!</p>
       </div>
-      <div class="row2">
-        <div class="input-group">
-          <label for="fGrade">학년</label>
-          <select id="fGrade">
-            <option value="">선택</option>
-            <option>중1</option><option>중2</option><option>중3</option>
-            <option>고1</option><option>고2</option><option>고3</option><option>N수</option>
-          </select>
+      <div class="notice-body">
+        <div class="nblock">
+          <div class="k">피드백 내용</div>
+          <div class="v">
+            <div class="step-flow">
+              <span class="chip">수능형 모의고사 80분</span><span class="arrow">→</span>
+              <span class="chip">채점</span><span class="arrow">→</span>
+              <span class="chip">분석지 작성</span><span class="arrow">→</span>
+              <span class="chip">1:1 피드백</span>
+            </div>
+          </div>
         </div>
-        <div class="input-group" style="flex:1.3">
-          <label for="fTail">연락처 뒷 4자리</label>
-          <input type="tel" id="fTail" inputmode="numeric" maxlength="4" placeholder="1234">
+        <div class="nblock">
+          <div class="k">예상 소요시간</div>
+          <div class="v">1시간 30분 ~ 2시간 이내</div>
+        </div>
+        <div class="nblock">
+          <div class="k">피드백 일정 · 목요일</div>
+          <div class="v">
+            <div class="times">
+              <span class="time-pill">1시 ~ 3시</span>
+              <span class="time-pill">3시 ~ 5시</span>
+              <span class="time-pill">5시 ~ 7시</span>
+            </div>
+            <p style="font-size:12.5px;color:var(--text-muted);margin-top:9px">위 세 타임 중 원하는 시간 하나를 선택하세요.</p>
+          </div>
+        </div>
+        <div class="nblock">
+          <div class="k">유의사항</div>
+          <div class="v">
+            <ul class="cautions">
+              <li>전 재원생 <em>피드백 필참</em>입니다. 단, ‘모의고사 시간분배 특강’ 수강자는 선택사항이므로 희망자만 신청하세요.</li>
+              <li>반별 정원은 <em>9명</em>이며 <em>선착순 마감</em>됩니다.</li>
+              <li><b>지각·결석은 절대 안 됩니다.</b> 뒤에 타학원 일정이 있는 경우 우선적으로 1:1 상담 후 귀가할 수 있습니다.</li>
+              <li>본 일정은 <em>방학기간 한정</em>이며, 개학 후 피드백 일정은 변동될 예정입니다.</li>
+            </ul>
+          </div>
         </div>
       </div>
-      <p class="hint">전화번호 전체는 저장하지 않습니다. 뒷 4자리는 본인 예약을 확인하고 변경할 때만 사용합니다.</p>
-      <button type="button" class="btn-submit" id="btnNext" style="margin-top:16px" disabled>다음 단계로</button>
     </div>
 
-    <div class="section" id="step2">
-      <div class="sec-title"><span class="step">2</span> 방문할 날짜를 선택해주세요</div>
+    <div class="section active" id="step1">
+      <div class="sec-title"><span class="step">1</span> 피드백 일정을 선택해주세요</div>
+      <div class="alert" id="errDate"></div>
       <div class="cal-header">
         <button type="button" id="btnPrev">◀</button>
         <span id="monthLabel">-</span>
@@ -199,22 +245,37 @@
         <div class="cal-dow">수</div><div class="cal-dow">목</div><div class="cal-dow">금</div><div class="cal-dow">토</div>
       </div>
       <div class="cal-grid" id="calGrid"></div>
-      <p class="cal-note">칸 안의 숫자는 남은 자리입니다.</p>
+      <p class="cal-note">피드백은 목요일에만 진행됩니다. 칸 안의 숫자는 남은 자리입니다.</p>
+
+      <div id="timeWrap" style="display:none;margin-top:22px">
+        <div class="sec-subtitle" style="font-size:14px;font-weight:700;margin-bottom:12px"><span id="pickedDateLabel"></span> · 시간 선택</div>
+        <div class="time-grid" id="timeGrid"></div>
+      </div>
+    </div>
+
+    <div class="section" id="step2">
+      <div class="sec-title"><span class="step">2</span> 이름을 입력해주세요</div>
+      <div class="alert" id="err2"></div>
+      <div class="picked-banner" id="pickedBanner"></div>
+      <div class="input-group" style="margin-top:16px">
+        <label for="fName">학생 이름</label>
+        <input type="text" id="fName" placeholder="예: 홍길동" autocomplete="name">
+      </div>
+      <p class="hint">신청·변경 시 본인 확인에 이름을 사용합니다. 반드시 실명으로 입력해주세요.</p>
     </div>
 
     <div class="section" id="step3">
-      <div class="sec-title"><span class="step">3</span> 방문 시간을 선택해주세요</div>
-      <div class="time-grid" id="timeGrid"></div>
-      <div class="input-group" style="margin-top:20px;margin-bottom:0">
-        <label for="fNote">봐줬으면 하는 부분 <span style="color:var(--text-muted);font-weight:500">(선택)</span></label>
-        <input type="text" id="fNote" placeholder="예: 비문학 지문에서 시간이 모자라요">
+      <div class="sec-title"><span class="step">3</span> 상담받고 싶은 부분 <span style="color:var(--text-muted);font-weight:500;font-size:14px">(선택)</span></div>
+      <div class="input-group" style="margin-bottom:0">
+        <label for="fNote">피드백 때 선생님께 특별히 상담받고 싶은 부분이 있다면 적어주세요.</label>
+        <input type="text" id="fNote" placeholder="예: 비문학 풀이 시간이 부족해요">
       </div>
     </div>
 
     <div class="bottom-bar" id="bottomBar">
       <div class="bottom-bar-inner">
         <div class="alert" id="errSubmit"></div>
-        <button type="button" class="btn-submit" id="btnSubmit" disabled>이 시간으로 예약 완료하기</button>
+        <button type="button" class="btn-submit" id="btnSubmit" disabled>일정을 먼저 선택해주세요</button>
       </div>
     </div>
   </div>
@@ -236,10 +297,9 @@ try {
 }
 
 const SLOTS = [
-  { id: "tue15", dow: 2, start: "15:00", end: "17:00", cap: 9 },
-  { id: "fri17", dow: 5, start: "17:00", end: "19:00", cap: 9 },
-  { id: "sat13", dow: 6, start: "13:00", end: "15:00", cap: 9 },
-  { id: "sat15", dow: 6, start: "15:00", end: "17:00", cap: 9 }
+  { id: "thu13", dow: 4, start: "13:00", end: "15:00", cap: 9 },
+  { id: "thu15", dow: 4, start: "15:00", end: "17:00", cap: 9 },
+  { id: "thu17", dow: 4, start: "17:00", end: "19:00", cap: 9 }
 ];
 const WEEKS_AHEAD  = 2;   // 이번 주 포함 몇 주치를 열지
 const CUTOFF_HOURS = 2;   // 시작 몇 시간 전에 마감할지
@@ -300,15 +360,8 @@ let myBooking = null;
 let submitting = false;
 let ready = null;
 
-const me = () => ({
-  name: $("#fName").value.trim(),
-  grade: $("#fGrade").value,
-  tail: digits($("#fTail").value)
-});
-const sameAs = (r, p) =>
-  String(r["이름"] || "").trim() === p.name &&
-  String(r["학년"] || "").trim() === p.grade &&
-  digits(r["뒤4자리"]) === p.tail;
+const me = () => ({ name: $("#fName").value.trim() });
+const sameAs = (r, p) => String(r["이름"] || "").trim() === p.name;
 
 const capOf = id => slotById(id)?.cap ?? 9;
 const takenOn = (dateStr, slotId) => rows.filter(r => r["날짜"] === dateStr && r["슬롯"] === slotId).length;
@@ -381,7 +434,27 @@ function renderTimes() {
       + '<span>' + timeLabel(s) + '</span><span class="c">' + sub + '</span></button>';
   }).join("");
 }
-function updateSubmit() { $("#btnSubmit").disabled = !(selDate && selSlot) || submitting; }
+function updateSubmit() {
+  const ok = selDate && selSlot;
+  const btn = $("#btnSubmit");
+  btn.disabled = !ok || submitting;
+  if (!selDate) btn.textContent = "일정을 먼저 선택해주세요";
+  else if (!selSlot) btn.textContent = "시간을 선택해주세요";
+  else if (me().name.length < 2) btn.textContent = "이름을 입력해주세요";
+  else btn.textContent = "이 시간으로 신청 완료하기";
+  btn.disabled = !(ok && me().name.length >= 2) || submitting;
+}
+
+/* 일정을 고르면 이름·상담 단계를 펼치고 배너를 채웁니다 */
+function revealAfterSchedule() {
+  if (!(selDate && selSlot)) return;
+  const s = slotById(selSlot);
+  const label = dateLabel(parseYmd(selDate)) + " " + timeLabel(s);
+  $("#pickedBanner").innerHTML = '<div class="pl">선택한 일정</div><div class="pv">' + label + '</div>';
+  $("#step2").classList.add("active");
+  $("#step3").classList.add("active");
+  $("#bottomBar").classList.add("active");
+}
 
 /* ═══════════════ 캘린더 및 카카오톡 ═══════════════ */
 const EVENT_TITLE = "이은경국어 주간 피드백";
@@ -513,29 +586,7 @@ function myFutureBooking(p) {
 }
 
 /* ═══════════════ 이벤트 ═══════════════ */
-const valid1 = () => { const p = me(); return p.name.length >= 2 && p.grade !== "" && p.tail.length === 4; };
-function refresh1() { $("#btnNext").disabled = !valid1(); }
-$("#fName").addEventListener("input", refresh1);
-$("#fGrade").addEventListener("change", refresh1);
-$("#fTail").addEventListener("input", function () { this.value = digits(this.value).slice(0, 4); refresh1(); });
-
-$("#btnNext").addEventListener("click", async () => {
-  const btn = $("#btnNext");
-  btn.disabled = true; btn.textContent = "확인 중…";
-  showErr($("#err1"), "");
-  try { await ready; } catch (e) {}
-
-  const p = me();
-  localStorage.setItem("ek_profile", JSON.stringify(p));
-  const existing = myFutureBooking(p);
-
-  btn.disabled = false; btn.textContent = "다음 단계로";
-  if (existing) { showMy(existing); return; }
-
-  $("#step2").classList.add("active");
-  renderCalendar();
-  setTimeout(() => $("#step2").scrollIntoView({ behavior: "smooth", block: "start" }), 80);
-});
+$("#fName").addEventListener("input", updateSubmit);
 
 $("#btnPrev").addEventListener("click", () => {
   if (!canNav(-1)) return;
@@ -548,23 +599,30 @@ $("#btnNextM").addEventListener("click", () => {
   renderCalendar();
 });
 
+// ① 날짜 선택 → 그 날 시간대 노출
 $("#calGrid").addEventListener("click", e => {
   const b = e.target.closest("[data-date]");
   if (!b || b.disabled) return;
   selDate = b.getAttribute("data-date");
   const open = slotsOn(selDate).filter(s => slotOpen(selDate, s));
   selSlot = open.length === 1 ? open[0].id : null;
-  renderCalendar(); renderTimes(); updateSubmit();
-  $("#step3").classList.add("active");
-  $("#bottomBar").classList.add("active");
-  setTimeout(() => $("#step3").scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+  renderCalendar(); renderTimes();
+  $("#pickedDateLabel").textContent = dateLabel(parseYmd(selDate));
+  $("#timeWrap").style.display = "block";
+  if (selSlot) revealAfterSchedule();
+  updateSubmit();
+  setTimeout(() => $("#timeWrap").scrollIntoView({ behavior: "smooth", block: "center" }), 80);
 });
 
+// ② 시간 선택 → 이름·상담 단계 펼침
 $("#timeGrid").addEventListener("click", e => {
   const b = e.target.closest("[data-slot]");
   if (!b || b.disabled) return;
   selSlot = b.getAttribute("data-slot");
-  renderTimes(); updateSubmit();
+  renderTimes();
+  revealAfterSchedule();
+  updateSubmit();
+  setTimeout(() => $("#step2").scrollIntoView({ behavior: "smooth", block: "start" }), 80);
 });
 
 $("#btnSubmit").addEventListener("click", async () => {
@@ -577,17 +635,26 @@ $("#btnSubmit").addEventListener("click", async () => {
   const p = me();
   const s = slotById(selSlot);
 
+  if (p.name.length < 2) {
+    submitting = false; updateSubmit();
+    showErr($("#err2"), "이름을 입력해주세요.");
+    $("#step2").scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+
   try {
-    if (capOf(selSlot) - takenOn(selDate, selSlot) <= 2) await load();
+    await load();   // 이름을 마지막에 받으므로 제출 직전에 최신 현황 확인
 
     const dup = myFutureBooking(p);
     if (dup) {
-      submitting = false; btn.textContent = "이 시간으로 예약 완료하기";
+      submitting = false; updateSubmit();
       showMy(dup); return;
     }
     if (capOf(selSlot) - takenOn(selDate, selSlot) <= 0) {
       throw new Error("방금 자리가 찼습니다. 다른 시간을 골라주세요.");
     }
+
+    localStorage.setItem("ek_profile", JSON.stringify(p));
 
     const row = {
       "id": "B" + Date.now().toString(36) + Math.floor(Math.random() * 900 + 100),
@@ -596,8 +663,8 @@ $("#btnSubmit").addEventListener("click", async () => {
       "날짜": selDate,
       "시간": timeLabel(s),
       "이름": p.name,
-      "학년": p.grade,
-      "뒤4자리": "'" + p.tail,
+      "학년": "",
+      "뒤4자리": "",
       "요청사항": $("#fNote").value.trim(),
       "신청시각": new Date().toLocaleString("ko-KR")
     };
@@ -606,13 +673,13 @@ $("#btnSubmit").addEventListener("click", async () => {
     calInfo = { date: selDate, slot: selSlot, name: p.name };
 
     $("#doneTicket").innerHTML =
-      '<div class="ticket-row"><span>학생</span><span>' + esc(p.name) + ' (' + p.grade + ')</span></div>'
+      '<div class="ticket-row"><span>학생</span><span>' + esc(p.name) + '</span></div>'
       + '<div class="ticket-row"><span>날짜</span><span>' + dateLabel(parseYmd(selDate)) + '</span></div>'
       + '<div class="ticket-row"><span>시간</span><span style="color:var(--primary)">' + row["시간"] + '</span></div>'
       + (row["요청사항"] ? '<div class="ticket-row"><span>요청</span><span style="font-weight:600">' + esc(row["요청사항"]) + '</span></div>' : "");
 
     $("#btnCopy").onclick = () => {
-      const t = "[이은경국어 피드백 예약]\n· " + p.name + " (" + p.grade + ")\n· "
+      const t = "[이은경국어 피드백 예약]\n· " + p.name + "\n· "
         + dateLabel(parseYmd(selDate)) + " " + row["시간"];
       navigator.clipboard && navigator.clipboard.writeText(t)
         .then(() => { $("#btnCopy").textContent = "복사되었습니다"; });
@@ -624,7 +691,6 @@ $("#btnSubmit").addEventListener("click", async () => {
     showErr($("#errSubmit"), err.message || "예약하지 못했습니다. 잠시 후 다시 시도해주세요.");
   } finally {
     submitting = false;
-    btn.textContent = "이 시간으로 예약 완료하기";
     updateSubmit();
   }
 });
@@ -641,11 +707,16 @@ $("#btnChange").addEventListener("click", async () => {
     await sdbDelete(myBooking["id"]);
     await load();
     myBooking = null; selDate = null; selSlot = null;
-    show("form");
-    $("#step1").classList.add("active");
+    $("#fNote").value = "";
+    $("#timeWrap").style.display = "none";
     $("#step2").classList.remove("active");
     $("#step3").classList.remove("active");
-    refresh1();
+    $("#bottomBar").classList.remove("active");
+    showErr($("#err2"), "");
+    show("form");
+    $("#step1").classList.add("active");
+    renderCalendar();
+    updateSubmit();
   } catch (e) {
     showErr($("#myErr"), "취소하지 못했습니다. 잠시 후 다시 시도해주세요.");
   } finally {
@@ -663,23 +734,20 @@ $("#btnChange").addEventListener("click", async () => {
 
   let p = null;
   try { p = JSON.parse(localStorage.getItem("ek_profile") || "null"); } catch (e) {}
-  if (p) {
-    $("#fName").value  = p.name || "";
-    $("#fGrade").value = p.grade || "";
-    $("#fTail").value  = p.tail || "";
-  }
+  if (p && p.name) $("#fName").value = p.name;
 
   show("form");
   $("#step1").classList.add("active");
-  refresh1();
+  updateSubmit();
 
   ready = load().then(() => {
-    if (p && p.name && p.tail && !myBooking) {
+    renderCalendar();
+    if (p && p.name && !myBooking) {
       const saved = myFutureBooking(p);
       if (saved) showMy(saved);
     }
   }).catch(() => {
-    showErr($("#err1"), "예약 현황을 불러오지 못했습니다. 새로고침 해주세요.");
+    showErr($("#errDate"), "예약 현황을 불러오지 못했습니다. 새로고침 해주세요.");
   });
 })();
 </script>

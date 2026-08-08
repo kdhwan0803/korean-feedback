@@ -31,7 +31,8 @@
   body { font-family: "Pretendard Variable", Pretendard, -apple-system, sans-serif; background: var(--bg); color: var(--ink); line-height: 1.5; padding-bottom: 100px; }
   .wrap { max-width: 520px; margin: 0 auto; min-height: 100vh; }
 
-  .header { background: var(--surface); padding: 16px 20px; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--border); text-align: center; }
+  .header { background: var(--surface); padding: 14px 20px; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
+  .header .logo { height: 30px; width: auto; display: block; }
   .header h1 { font-size: 17px; font-weight: 700; }
 
   .section { background: var(--surface); margin: 12px 16px; padding: 24px 20px; border-radius: 16px; border: 1px solid var(--border); display: none; animation: fadeIn .3s ease; }
@@ -143,7 +144,7 @@
 <body>
 
 <div class="wrap">
-  <header class="header"><h1>이은경국어 주간 피드백 예약</h1></header>
+  <header class="header"><img src="logo.png" alt="이은경국어" class="logo"></header>
 
   <div class="loading" id="boot" style="display:none">불러오는 중…</div>
 
@@ -228,7 +229,7 @@
           <div class="k">유의사항</div>
           <div class="v">
             <ul class="cautions">
-              <li>전 재원생 <em>피드백 필참</em>입니다. 단, ‘모의고사 시간분배 특강’ 수강자는 선택사항이므로 희망자만 신청하세요.</li>
+              <li>전 재원생 <em>피드백 필참</em>입니다.</li>
               <li>반별 정원은 <em>9명</em>이며 <em>선착순 마감</em>됩니다.</li>
               <li><b>지각·결석은 절대 안 됩니다.</b> 뒤에 타학원 일정이 있는 경우 우선적으로 1:1 상담 후 귀가할 수 있습니다.</li>
               <li>피드백 일정은 학사 사정에 따라 변동될 수 있으며, 변경 시 별도로 공지합니다.</li>

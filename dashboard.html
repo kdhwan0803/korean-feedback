@@ -9,7 +9,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
-    --primary: #4338CA; --primary-bg: #EEF2FF; --ink: #111827; --text-muted: #6B7280;
+    --primary: #15644B; --primary-bg: #E6F2ED; --ink: #111827; --text-muted: #6B7280;
     --bg: #F3F4F6; --surface: #FFFFFF; --border: #E5E7EB;
     --danger-bg: #FEF2F2; --danger-text: #991B1B; --danger-border: #FECACA;
     --ok-bg: #ECFDF5; --ok-text: #065F46; --ok-border: #A7F3D0;
@@ -157,14 +157,14 @@
 /* ═══════════════ 설정 ═══════════════ */
 const SHEETDB      = "https://sheetdb.io/api/v1/bojbvwmxq4dyv";
 const ROSTER_SHEET = "명부";          // 스프레드시트의 두 번째 탭 이름
-const PASSWORD     = "2545";          // ← 원하는 비밀번호로 바꾸세요
+const PASSWORD     = "1234";          // ← 원하는 비밀번호로 바꾸세요
 const WEEKS        = 3;
 
 /* index.html 의 SLOTS 와 반드시 동일하게 유지하세요 */
 const SLOTS = [
-  { id: "thu13", dow: 4, day: "목요일", start: "13:00", end: "15:00", cap: 9 },
-  { id: "thu15", dow: 4, day: "목요일", start: "15:00", end: "17:00", cap: 9 },
-  { id: "thu17", dow: 4, day: "목요일", start: "17:00", end: "19:00", cap: 9 }
+  { id: "thu1730", dow: 4, day: "목요일", start: "17:30", end: "19:30", cap: 9 },
+  { id: "fri19",   dow: 5, day: "금요일", start: "19:00", end: "21:00", cap: 9 },
+  { id: "fri21",   dow: 5, day: "금요일", start: "21:00", end: "23:00", cap: 9 }
 ];
 const BOOKING_URL = location.href.replace(/[^/]*$/, "");
 
@@ -177,14 +177,14 @@ const parseYmd = s => { const p = String(s).split("-"); return new Date(+p[0], +
 const addDays = (d, n) => { const x = new Date(d.getTime()); x.setDate(x.getDate()+n); return x; };
 const esc = s => String(s||"").replace(/[<>&]/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]));
 
-// 피드백 요일(목=4)이 지난 주는 건너뛰고, 그 주 목요일이 아직 안 지났으면 이번 주로 봅니다.
-const FEEDBACK_DOW = 4;
+// 마지막 피드백 요일(금=5)이 지난 주는 다음 주를 기준으로 잡습니다.
+const LAST_FEEDBACK_DOW = 5;
 function baseMonday() {
   const now = new Date();
   const mon = mondayOf(now);
-  const thu = addDays(mon, FEEDBACK_DOW - 1);      // 이번 주 목요일
-  thu.setHours(23, 59, 59, 999);                   // 목요일 당일 끝까지는 이번 주 유지
-  return now > thu ? addDays(mon, 7) : mon;         // 목요일이 지났으면 다음 주가 기준
+  const last = addDays(mon, LAST_FEEDBACK_DOW - 1); // 이번 주 금요일
+  last.setHours(23, 59, 59, 999);                   // 금요일 당일 끝까지는 이번 주 유지
+  return now > last ? addDays(mon, 7) : mon;
 }
 function mondayOf(d) {
   const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());

@@ -22,7 +22,7 @@
 <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.6.0/kakao.min.js"></script>
 <style>
   :root {
-    --primary: #4338CA; --primary-bg: #EEF2FF; --ink: #111827; --text-muted: #6B7280;
+    --primary: #15644B; --primary-bg: #E6F2ED; --ink: #111827; --text-muted: #6B7280;
     --bg: #F3F4F6; --surface: #FFFFFF; --border: #E5E7EB;
     --warn: #B45309; --danger: #B91C1C;
     --kakao: #FEE500; /* 카카오톡 노란색 */
@@ -115,7 +115,7 @@
   .alert { padding: 12px 14px; border-radius: 10px; font-size: 13.5px; font-weight: 600; margin-bottom: 14px; display: none; text-align: left; background: #FEF2F2; color: var(--danger); border: 1px solid #FECACA; }
   .loading { text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 14px; }
 
-  .picked-banner { background: var(--primary-bg); border: 1px solid #C7D2FE; border-radius: 12px; padding: 14px 16px; }
+  .picked-banner { background: var(--primary-bg); border: 1px solid #B7D8CB; border-radius: 12px; padding: 14px 16px; }
   .picked-banner .pl { font-size: 11.5px; font-weight: 800; letter-spacing: .1em; color: var(--primary); margin-bottom: 4px; }
   .picked-banner .pv { font-size: 16px; font-weight: 800; color: var(--ink); }
   .notice { background: var(--surface); margin: 12px 16px; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
@@ -188,7 +188,7 @@
   <div id="screenForm">
     <div class="notice">
       <div class="notice-head">
-        <h2>방학기간 피드백 선착순 수강신청</h2>
+        <h2>주간 피드백 선착순 수강신청</h2>
         <p>원하는 시간에 신청할 수 있도록 미리 ‘알람’을 맞춰 두세요!</p>
       </div>
       <div class="notice-body">
@@ -208,14 +208,20 @@
           <div class="v">1시간 30분 ~ 2시간 이내</div>
         </div>
         <div class="nblock">
-          <div class="k">피드백 일정 · 목요일</div>
+          <div class="k">피드백 일정</div>
           <div class="v">
-            <div class="times">
-              <span class="time-pill">1시 ~ 3시</span>
-              <span class="time-pill">3시 ~ 5시</span>
-              <span class="time-pill">5시 ~ 7시</span>
+            <div style="margin-bottom:10px">
+              <div style="font-size:13px;font-weight:800;margin-bottom:6px">목요일</div>
+              <div class="times"><span class="time-pill">5시 30분 ~ 7시 30분</span></div>
             </div>
-            <p style="font-size:12.5px;color:var(--text-muted);margin-top:9px">위 세 타임 중 원하는 시간 하나를 선택하세요.</p>
+            <div>
+              <div style="font-size:13px;font-weight:800;margin-bottom:6px">금요일</div>
+              <div class="times">
+                <span class="time-pill">7시 ~ 9시</span>
+                <span class="time-pill">9시 ~ 11시</span>
+              </div>
+            </div>
+            <p style="font-size:12.5px;color:var(--text-muted);margin-top:11px">위 시간 중 원하는 시간 하나를 선택하세요.</p>
           </div>
         </div>
         <div class="nblock">
@@ -225,7 +231,7 @@
               <li>전 재원생 <em>피드백 필참</em>입니다. 단, ‘모의고사 시간분배 특강’ 수강자는 선택사항이므로 희망자만 신청하세요.</li>
               <li>반별 정원은 <em>9명</em>이며 <em>선착순 마감</em>됩니다.</li>
               <li><b>지각·결석은 절대 안 됩니다.</b> 뒤에 타학원 일정이 있는 경우 우선적으로 1:1 상담 후 귀가할 수 있습니다.</li>
-              <li>본 일정은 <em>방학기간 한정</em>이며, 개학 후 피드백 일정은 변동될 예정입니다.</li>
+              <li>피드백 일정은 학사 사정에 따라 변동될 수 있으며, 변경 시 별도로 공지합니다.</li>
             </ul>
           </div>
         </div>
@@ -245,7 +251,7 @@
         <div class="cal-dow">수</div><div class="cal-dow">목</div><div class="cal-dow">금</div><div class="cal-dow">토</div>
       </div>
       <div class="cal-grid" id="calGrid"></div>
-      <p class="cal-note">피드백은 목요일에만 진행됩니다. 칸 안의 숫자는 남은 자리입니다.</p>
+      <p class="cal-note">피드백은 목·금요일에 진행됩니다. 칸 안의 숫자는 남은 자리입니다.</p>
 
       <div id="timeWrap" style="display:none;margin-top:22px">
         <div class="sec-subtitle" style="font-size:14px;font-weight:700;margin-bottom:12px"><span id="pickedDateLabel"></span> · 시간 선택</div>
@@ -297,9 +303,9 @@ try {
 }
 
 const SLOTS = [
-  { id: "thu13", dow: 4, start: "13:00", end: "15:00", cap: 9 },
-  { id: "thu15", dow: 4, start: "15:00", end: "17:00", cap: 9 },
-  { id: "thu17", dow: 4, start: "17:00", end: "19:00", cap: 9 }
+  { id: "thu1730", dow: 4, start: "17:30", end: "19:30", cap: 9 },
+  { id: "fri19",   dow: 5, start: "19:00", end: "21:00", cap: 9 },
+  { id: "fri21",   dow: 5, start: "21:00", end: "23:00", cap: 9 }
 ];
 const WEEKS_AHEAD  = 2;   // 이번 주 포함 몇 주치를 열지
 const CUTOFF_HOURS = 2;   // 시작 몇 시간 전에 마감할지

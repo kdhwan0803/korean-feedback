@@ -235,7 +235,17 @@ async function sdbReplaceRoster(list) {
 let allRows = [], roster = [], rosterMode = "sheet";
 let weeks = [], curWeek = "";
 
-const weekRows = () => allRows.filter(r => r["주차"] === curWeek);
+// 예약의 실제 날짜가 현재 주(월~일)에 속하면 이번 주 예약으로 봅니다.
+// (시트의 '주차' 문자열에 의존하지 않아, 페이지별 주차 계산이 달라도 안전합니다)
+const weekRows = () => {
+  const mon = parseYmd(curWeek);
+  const sun = addDays(mon, 6);
+  const lo = ymd(mon), hi = ymd(sun);
+  return allRows.filter(r => {
+    const d = String(r["날짜"] || "");
+    return d >= lo && d <= hi;
+  });
+};
 const capOf = id => (SLOTS.find(s => s.id === id) || {}).cap || 9;
 const slotDate = (week, dow) => ymd(addDays(parseYmd(week), dow - 1));
 const sameStudent = (r, st) => String(r["이름"]||"").trim() === st.name;

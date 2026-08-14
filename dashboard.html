@@ -155,7 +155,8 @@
 
 <script>
 /* ═══════════════ 설정 ═══════════════ */
-const SHEETDB      = "https://sheetdb.io/api/v1/bojbvwmxq4dyv";
+// Apps Script 웹앱 주소(/exec). index.html 과 동일한 값으로.
+const API_URL      = "https://script.google.com/macros/s/AKfycbwUYZ1J5xgTcVFjg1A5lAng35OZ6CM5qY_ww8ewQzbjW9_sEwDXUTLz4yG2iL1hlVcI/exec";
 const ROSTER_SHEET = "명부";          // 스프레드시트의 두 번째 탭 이름
 const PASSWORD     = "2545";          // ← 원하는 비밀번호로 바꾸세요
 const WEEKS        = 3;
@@ -198,28 +199,36 @@ function toast(msg) {
 
 /* ═══════════════ SheetDB ═══════════════ */
 async function sdbGetAll(sheet) {
-  const url = SHEETDB + (sheet ? "?sheet=" + encodeURIComponent(sheet) : "");
+  const url = API_URL + (sheet ? "?sheet=" + encodeURIComponent(sheet) : "");
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) throw new Error("조회 실패");
   const j = await res.json();
   return Array.isArray(j) ? j : [];
 }
 async function sdbDelete(id) {
-  const res = await fetch(SHEETDB + "/id/" + encodeURIComponent(id), { method: "DELETE" });
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ action: "delete", sheet: "시트1", id: id })
+  });
   if (!res.ok) throw new Error("삭제 실패");
-  return await res.json();
+  const j = await res.json();
+  if (j.error) throw new Error("삭제 실패");
+  return j;
 }
 async function sdbReplaceRoster(list) {
-  const q = "?sheet=" + encodeURIComponent(ROSTER_SHEET);
-  await fetch(SHEETDB + "/all" + q, { method: "DELETE" });
-  if (list.length) {
-    const res = await fetch(SHEETDB + q, {
-      method: "POST",
-      headers: { "Accept": "application/json", "Content-Type": "application/json" },
-      body: JSON.stringify({ data: list.map(s => ({ "이름": s.name })) })
-    });
-    if (!res.ok) throw new Error("명부 저장 실패");
-  }
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({
+      action: "replaceAll",
+      sheet: ROSTER_SHEET,
+      rows: list.map(s => ({ "이름": s.name }))
+    })
+  });
+  if (!res.ok) throw new Error("명부 저장 실패");
+  const j = await res.json();
+  if (j.error) throw new Error("명부 저장 실패");
 }
 
 /* ═══════════════ 상태 ═══════════════ */

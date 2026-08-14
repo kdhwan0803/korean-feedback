@@ -293,7 +293,8 @@
 
 <script>
 /* ═══════════════ 설정 ═══════════════ */
-const SHEETDB = "https://sheetdb.io/api/v1/bojbvwmxq4dyv";
+// Apps Script 웹앱 주소(/exec)로 교체하세요. 배포 후 나오는 URL.
+const API_URL = "https://script.google.com/macros/s/AKfycbwUYZ1J5xgTcVFjg1A5lAng35OZ6CM5qY_ww8ewQzbjW9_sEwDXUTLz4yG2iL1hlVcI/exec";
 
 // ★ 카카오 JavaScript 키 — 여기 한 곳만 고치면 됩니다
 //   카카오 개발자사이트 > 내 애플리케이션 > 앱 키 > JavaScript 키
@@ -341,24 +342,32 @@ function showErr(el, msg) { el.textContent = msg || ""; el.style.display = msg ?
 
 /* ═══════════════ SheetDB ═══════════════ */
 async function sdbGetAll() {
-  const res = await fetch(SHEETDB, { cache: "no-store" });
+  const res = await fetch(API_URL, { cache: "no-store" });
   if (!res.ok) throw new Error("조회 실패");
   const j = await res.json();
   return Array.isArray(j) ? j : [];
 }
 async function sdbAdd(row) {
-  const res = await fetch(SHEETDB, {
+  const res = await fetch(API_URL, {
     method: "POST",
-    headers: { "Accept": "application/json", "Content-Type": "application/json" },
-    body: JSON.stringify({ data: [row] })
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ action: "add", sheet: "시트1", row: row })
   });
   if (!res.ok) throw new Error("저장에 실패했습니다.");
-  return await res.json();
+  const j = await res.json();
+  if (j.error) throw new Error("저장에 실패했습니다.");
+  return j;
 }
 async function sdbDelete(id) {
-  const res = await fetch(SHEETDB + "/id/" + encodeURIComponent(id), { method: "DELETE" });
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ action: "delete", sheet: "시트1", id: id })
+  });
   if (!res.ok) throw new Error("삭제에 실패했습니다.");
-  return await res.json();
+  const j = await res.json();
+  if (j.error) throw new Error("삭제에 실패했습니다.");
+  return j;
 }
 
 /* ═══════════════ 상태 ═══════════════ */

@@ -212,15 +212,15 @@
           <div class="k">피드백 일정</div>
           <div class="v">
             <div style="margin-bottom:10px">
-              <div style="font-size:13px;font-weight:800;margin-bottom:6px">목요일</div>
-              <div class="times"><span class="time-pill">9시 ~ 11시</span></div>
-            </div>
-            <div>
-              <div style="font-size:13px;font-weight:800;margin-bottom:6px">금요일</div>
+              <div style="font-size:13px;font-weight:800;margin-bottom:6px">월요일</div>
               <div class="times">
-                <span class="time-pill">5시 30분 ~ 7시 30분</span>
+                <span class="time-pill">5시 ~ 7시</span>
                 <span class="time-pill">9시 ~ 11시</span>
               </div>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:800;margin-bottom:6px">목요일</div>
+              <div class="times"><span class="time-pill">9시 ~ 11시</span></div>
             </div>
             <div style="display:flex;align-items:center;gap:8px;margin-top:12px;padding:11px 13px;background:var(--primary-bg);border-radius:10px">
               <span style="font-size:18px;line-height:1">👇</span>
@@ -255,7 +255,7 @@
         <div class="cal-dow">수</div><div class="cal-dow">목</div><div class="cal-dow">금</div><div class="cal-dow">토</div>
       </div>
       <div class="cal-grid" id="calGrid"></div>
-      <p class="cal-note">피드백은 목·금요일에 진행됩니다. 칸 안의 숫자는 남은 자리입니다.</p>
+      <p class="cal-note">피드백은 월·목요일에 진행됩니다. 칸 안의 숫자는 남은 자리입니다.</p>
 
       <div id="timeWrap" style="display:none;margin-top:22px">
         <div class="sec-subtitle" style="font-size:14px;font-weight:700;margin-bottom:12px"><span id="pickedDateLabel"></span> · 시간 선택</div>
@@ -308,9 +308,9 @@ try {
 }
 
 const SLOTS = [
-  { id: "thu21",   dow: 4, start: "21:00", end: "23:00", cap: 9 },
-  { id: "fri1730", dow: 5, start: "17:30", end: "19:30", cap: 9 },
-  { id: "fri21",   dow: 5, start: "21:00", end: "23:00", cap: 9 }
+  { id: "mon17", dow: 1, start: "17:00", end: "19:00", cap: 9 },
+  { id: "mon21", dow: 1, start: "21:00", end: "23:00", cap: 9 },
+  { id: "thu21", dow: 4, start: "21:00", end: "23:00", cap: 9 }
 ];
 const WEEKS_AHEAD  = 2;   // 이번 주 포함 몇 주치를 열지
 const CUTOFF_HOURS = 2;   // 시작 몇 시간 전에 마감할지

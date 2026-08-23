@@ -163,9 +163,9 @@ const WEEKS        = 3;
 
 /* index.html 의 SLOTS 와 반드시 동일하게 유지하세요 */
 const SLOTS = [
-  { id: "thu21",   dow: 4, day: "목요일", start: "21:00", end: "23:00", cap: 9 },
-  { id: "fri1730", dow: 5, day: "금요일", start: "17:30", end: "19:30", cap: 9 },
-  { id: "fri21",   dow: 5, day: "금요일", start: "21:00", end: "23:00", cap: 9 }
+  { id: "mon17", dow: 1, day: "월요일", start: "17:00", end: "19:00", cap: 9 },
+  { id: "mon21", dow: 1, day: "월요일", start: "21:00", end: "23:00", cap: 9 },
+  { id: "thu21", dow: 4, day: "목요일", start: "21:00", end: "23:00", cap: 9 }
 ];
 const BOOKING_URL = location.href.replace(/[^/]*$/, "");
 
@@ -179,11 +179,11 @@ const addDays = (d, n) => { const x = new Date(d.getTime()); x.setDate(x.getDate
 const esc = s => String(s||"").replace(/[<>&]/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]));
 
 // 마지막 피드백 요일(금=5)이 지난 주는 다음 주를 기준으로 잡습니다.
-const LAST_FEEDBACK_DOW = 5;
+const LAST_FEEDBACK_DOW = 4;
 function baseMonday() {
   const now = new Date();
   const mon = mondayOf(now);
-  const last = addDays(mon, LAST_FEEDBACK_DOW - 1); // 이번 주 금요일
+  const last = addDays(mon, LAST_FEEDBACK_DOW - 1); // 이번 주 목요일
   last.setHours(23, 59, 59, 999);                   // 금요일 당일 끝까지는 이번 주 유지
   return now > last ? addDays(mon, 7) : mon;
 }

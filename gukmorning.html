@@ -217,7 +217,7 @@
 <script>
 /* ═══════════════ 설정 ═══════════════ */
 // Apps Script 웹앱 주소(/exec). 국모닝 전용으로 새로 배포한 주소를 넣으세요.
-const API_URL = "PASTE_YOUR_GUKMORNING_EXEC_URL";
+const API_URL = "https://script.google.com/macros/s/AKfycbwUYZ1J5xgTcVFjg1A5lAng35OZ6CM5qY_ww8ewQzbjW9_sEwDXUTLz4yG2iL1hlVcI/exec";
 const SHEET_TAB = "국모닝";        // 신청이 쌓일 시트 탭 이름
 
 const ENTER_TIME = "08:30";        // 입실 시간
@@ -379,6 +379,7 @@ $("#fName").addEventListener("input", () => {
   updateSubmit();
   $("#bottomBar").classList.add("active");
   $("#step2").classList.add("active");
+  renderCalendar();   // 달력이 비어 보이지 않도록 확실히 그립니다
 });
 
 $("#btnPrev").addEventListener("click", () => {
@@ -508,6 +509,7 @@ function applySuggestion() {
 
   show("form");
   $("#step1").classList.add("active");
+  renderCalendar();   // 데이터 로딩과 무관하게 달력을 먼저 그립니다
   updateSubmit();
 
   ready = load().then(() => {
@@ -524,6 +526,7 @@ function applySuggestion() {
       updateSubmit();
     }
   }).catch(() => {
+    renderCalendar();   // 실패해도 달력 날짜는 보이도록
     showErr($("#err1"), "신청 현황을 불러오지 못했습니다. 새로고침 해주세요.");
   });
 })();

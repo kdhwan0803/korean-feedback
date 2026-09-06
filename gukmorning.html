@@ -19,6 +19,7 @@
 <meta name="twitter:card" content="summary_large_image">
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" integrity="sha384-TiCUE00h649CAMonG018J2ujOgDKW/kVWlChEuu4jK2vxfAAD0eZxzCKakxg55G4" crossorigin="anonymous"></script>
 <style>
   :root {
     --ink: #1A1A2E;          /* 새벽 남색 계열 잉크 */
@@ -99,6 +100,8 @@
   .btn-submit:disabled { background: #C9C3B6; cursor: not-allowed; }
   .btn-outline { width: 100%; padding: 14px; border: 1px solid var(--night); border-radius: 10px; background: #fff; color: var(--night); font-size: 15px; font-weight: 700; cursor: pointer; margin-bottom: 12px; font-family: inherit; }
   .btn-ghost { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: #fff; color: var(--text-muted); font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .btn-kakao { width: 100%; padding: 14px; border: none; border-radius: 10px; background: #FEE500; color: #191600; font-size: 15px; font-weight: 800; cursor: pointer; margin-bottom: 12px; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 7px; }
+  .btn-kakao span.ico { font-size: 16px; }
 
   .screen { display: none; text-align: center; padding: 36px 24px; }
   .screen.active { display: block; }
@@ -136,6 +139,7 @@
       <div class="ticket-row"><span>시간</span><span>오전 8:30 입실</span></div>
     </div>
     <div class="alert" id="myErr"></div>
+    <button type="button" class="btn-kakao" id="btnKakaoMy"><span class="ico">💬</span> 카카오톡으로 저장하기</button>
     <button type="button" class="btn-outline" id="btnChange">다른 날로 바꾸기</button>
     <button type="button" class="btn-ghost" id="btnReload">새로고침</button>
   </div>
@@ -146,6 +150,7 @@
     <h2>신청되었습니다</h2>
     <div class="who">늦지 않게, 아침에 만나요.</div>
     <div class="ticket" id="doneTicket"></div>
+    <button type="button" class="btn-kakao" id="btnKakaoDone"><span class="ico">💬</span> 카카오톡으로 저장하기</button>
     <button type="button" class="btn-outline" id="btnCopy">신청 내용 복사</button>
     <button type="button" class="btn-ghost" id="btnDoneOk">확인</button>
   </div>
@@ -219,6 +224,10 @@
 // Apps Script 웹앱 주소(/exec). 국모닝 전용으로 새로 배포한 주소를 넣으세요.
 const API_URL = "https://script.google.com/macros/s/AKfycbwUYZ1J5xgTcVFjg1A5lAng35OZ6CM5qY_ww8ewQzbjW9_sEwDXUTLz4yG2iL1hlVcI/exec";
 const SHEET_TAB = "국모닝";        // 신청이 쌓일 시트 탭 이름
+
+// 카카오 JavaScript 키 (피드백 시스템과 동일)
+const KAKAO_KEY = "13fea0afda0d162b265b714fbe9d8594";
+try { Kakao.init(KAKAO_KEY); } catch (e) { console.log("카카오 SDK 미로드 — 카톡 버튼만 비활성"); }
 
 const ENTER_TIME = "08:30";        // 입실 시간
 const OPEN_DOWS  = [6, 0];         // 열리는 요일: 토(6), 일(0)
@@ -339,6 +348,32 @@ function revealPicked() {
   $("#step3").classList.add("active");
 }
 
+/* ═══════════════ 카카오톡 저장 ═══════════════ */
+function sendKakao(info) {
+  if (!window.Kakao) { alert("카카오 기능을 불러올 수 없습니다. 광고 차단기를 끄고 새로고침 해주세요."); return; }
+  if (!Kakao.isInitialized()) {
+    try { Kakao.init(KAKAO_KEY); }
+    catch (e) { alert("카카오톡 연결에 실패했습니다. 아래 복사 버튼을 이용해주세요."); return; }
+  }
+  try {
+    Kakao.Share.sendDefault({
+      objectType: "text",
+      text: "[국모닝 신청]\n\n" + info.name + " 학생\n"
+          + dateLabel(parseYmd(info.date)) + " · 오전 8:30 입실\n\n"
+          + "실제 수능처럼, 늦지 않게 오세요!",
+      link: { mobileWebUrl: location.href, webUrl: location.href },
+      buttonTitle: "내 신청 확인하기"
+    });
+  } catch (error) {
+    alert("카카오톡을 열지 못했습니다. 아래 복사 버튼을 이용해주세요.");
+    console.error(error);
+  }
+}
+let kakaoInfo = null;   // 현재 화면의 신청 정보
+
+$("#btnKakaoDone").addEventListener("click", () => { if (kakaoInfo) sendKakao(kakaoInfo); });
+$("#btnKakaoMy").addEventListener("click", () => { if (kakaoInfo) sendKakao(kakaoInfo); });
+
 /* ═══════════════ 화면 ═══════════════ */
 function show(which) {
   $("#boot").style.display = "none";
@@ -350,6 +385,7 @@ function show(which) {
 }
 function showMy(r) {
   myBooking = r;
+  kakaoInfo = { name: r["이름"], date: r["날짜"] };
   $("#myName").textContent = r["이름"];
   $("#myDate").textContent = dateLabel(parseYmd(r["날짜"]));
   showErr($("#myErr"), "");
@@ -431,6 +467,7 @@ $("#btnSubmit").addEventListener("click", async () => {
     await apiAdd(row);
     rows.push(row);
     localStorage.setItem("gm_name", p.name);
+    kakaoInfo = { name: p.name, date: selDate };
 
     $("#doneTicket").innerHTML =
       '<div class="ticket-row"><span>학생</span><span>' + esc(p.name) + '</span></div>'

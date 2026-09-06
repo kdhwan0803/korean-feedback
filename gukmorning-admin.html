@@ -60,6 +60,25 @@
   .name-tag .x:hover { color: var(--danger); }
   .empty { font-size: 13px; color: #B8B2A5; font-style: italic; padding: 4px 0; }
 
+  .miss-box { border-radius: 16px; padding: 16px 18px; margin-bottom: 18px; background: #FDECEA; border: 1px solid #F5C6C0; }
+  .miss-box.clear { background: #EAF7EE; border-color: #BFE6C9; }
+  .miss-title { font-size: 14.5px; font-weight: 800; color: var(--danger); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .miss-box.clear .miss-title { color: #1E7A34; }
+  .miss-title .cnt { background: #fff; padding: 2px 10px; border-radius: 12px; font-size: 12.5px; border: 1px solid currentColor; }
+  .miss-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 11px; }
+  .miss-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .miss-tag { background: #fff; border: 1px solid #F0B8B0; color: var(--danger); padding: 6px 12px; border-radius: 8px; font-size: 13.5px; font-weight: 700; cursor: pointer; font-family: inherit; transition: .15s; }
+  .miss-tag:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+  .miss-actions { margin-left: auto; display: flex; gap: 8px; }
+
+  .roster-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 18px; display: none; }
+  .roster-panel.open { display: block; }
+  .roster-panel h2 { font-size: 15.5px; font-weight: 800; margin-bottom: 6px; }
+  .roster-panel p { font-size: 13px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.6; }
+  .roster-panel textarea { width: 100%; height: 160px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 13.5px; background: var(--cream); resize: vertical; line-height: 1.7; }
+  .roster-panel textarea:focus { outline: none; border-color: var(--sun); background: #fff; }
+  .roster-actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+
   .toast { position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 12px); background: var(--ink); color: #fff; padding: 12px 20px; border-radius: 999px; font-size: 13.5px; font-weight: 700; opacity: 0; pointer-events: none; transition: .24s; z-index: 90; }
   .toast.on { opacity: 1; transform: translate(-50%, 0); }
   .foot { text-align: center; margin-top: 22px; font-size: 12px; color: var(--text-muted); }
@@ -82,6 +101,7 @@
       <h1>국모닝 신청 현황</h1>
     </div>
     <div class="spacer">
+      <button class="btn" id="btnRoster">학생 명부</button>
       <button class="btn" id="btnExport">명단 이미지 저장</button>
       <button class="btn primary" id="btnFetch">새로고침</button>
     </div>
@@ -93,6 +113,26 @@
     <button class="arrow" id="wkNext">▶</button>
     <button class="today-btn" id="wkToday">이번 주</button>
   </div>
+  <div class="roster-panel" id="rosterPanel">
+    <h2>전체 원생 명단</h2>
+    <p>한 줄에 한 명씩 <b>이름</b>만 입력하세요. 이 명단과 그 주 신청을 대조해 아직 신청 안 한 학생을 찾아줍니다. 피드백 예약과 같은 명부를 씁니다.</p>
+    <textarea id="rosterTa" placeholder="홍길동&#10;김국어"></textarea>
+    <div class="roster-actions">
+      <button class="btn primary" id="btnRosterSave">명부 저장</button>
+      <button class="btn" id="btnRosterClose" style="margin-left:auto">닫기</button>
+    </div>
+  </div>
+
+  <div class="miss-box" id="missBox" style="display:none">
+    <div class="miss-title">
+      <span id="missLabel">이번 주 아직 신청 안 한 학생</span>
+      <span class="cnt" id="missCnt">0명</span>
+      <span class="miss-actions"><button class="btn" id="btnMissCopy" style="padding:6px 12px;font-size:12.5px">전체 문구 복사</button></span>
+    </div>
+    <div class="miss-sub" id="missSub">이름을 누르면 그 학생에게 보낼 신청 안내 문구가 복사됩니다.</div>
+    <div class="miss-list" id="missList"></div>
+  </div>
+
   <div class="summary" id="summary">불러오는 중…</div>
 
   <div id="exportArea">
@@ -108,6 +148,8 @@
 /* ═══════════════ 설정 ═══════════════ */
 const API_URL   = "https://script.google.com/macros/s/AKfycbwUYZ1J5xgTcVFjg1A5lAng35OZ6CM5qY_ww8ewQzbjW9_sEwDXUTLz4yG2iL1hlVcI/exec";   // 학생 페이지와 동일한 주소
 const SHEET_TAB = "국모닝";
+const ROSTER_TAB = "명부";
+const SIGNUP_URL = "https://kdhwan0803.github.io/korean-feedback/gukmorning.html";
 const PASSWORD  = "2545";
 const OPEN_DOWS = [6, 0];              // 토, 일
 const CAP_BY_DOW = { 6: 5, 0: 7 };     // 토 5명, 일 7명
@@ -142,6 +184,7 @@ async function apiDelete(id) {
 
 /* ═══════════════ 상태 ═══════════════ */
 let rows = [];
+let roster = [];
 
 /* 열리는 모든 토·일 날짜 목록 (오늘~마지막날) */
 // 이번 주 월요일 기준
@@ -227,6 +270,62 @@ function renderGrid() {
   }).join("");
 }
 
+/* roster */
+async function loadRoster() {
+  try {
+    const res = await fetch(API_URL + "?sheet=" + encodeURIComponent(ROSTER_TAB), { cache: "no-store" });
+    const j = await res.json();
+    return Array.isArray(j) ? j.map(r => String(r["이름"]||"").trim()).filter(Boolean) : [];
+  } catch (e) { return []; }
+}
+async function saveRoster(list) {
+  const res = await fetch(API_URL, {
+    method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ action: "replaceAll", sheet: ROSTER_TAB, rows: list.map(n => ({ "이름": n })) })
+  });
+  if (!res.ok) throw new Error("명부 저장 실패");
+  const j = await res.json(); if (j.error) throw new Error("명부 저장 실패");
+}
+function signedUpThisWeek() {
+  const ds = weekDates();
+  const set = new Set();
+  rows.forEach(r => { if (ds.indexOf(r["날짜"]) >= 0) set.add(String(r["이름"]||"").trim()); });
+  return set;
+}
+function missingThisWeek() {
+  if (!roster.length) return [];
+  const done = signedUpThisWeek();
+  return roster.filter(n => !done.has(n));
+}
+function missMsg(name) {
+  const mon = parseYmd(curWeek), sun = addDays(mon, 6);
+  return "[국모닝] 신청 안내\n\n"
+    + "'" + name + "' 학생, " + (mon.getMonth()+1) + "/" + mon.getDate() + "~" + (sun.getMonth()+1) + "/" + sun.getDate()
+    + " 주 국모닝 신청이 아직 안 되어 있어요.\n"
+    + "아침 8시 30분, 수능 1교시처럼 실전 국어를 풀어봅니다.\n"
+    + "아래 링크에서 토·일 중 하루를 신청해주세요.\n" + SIGNUP_URL;
+}
+function renderMissing() {
+  const box = $("#missBox");
+  if (!roster.length) { box.style.display = "none"; return; }
+  const miss = missingThisWeek();
+  box.style.display = "block";
+  $("#missCnt").textContent = miss.length + "명";
+  if (!miss.length) {
+    box.classList.add("clear");
+    $("#missLabel").textContent = "이번 주 전원 신청 완료";
+    $("#missSub").textContent = "";
+    $("#missList").innerHTML = "";
+    $("#btnMissCopy").style.display = "none";
+  } else {
+    box.classList.remove("clear");
+    $("#missLabel").textContent = "아직 신청 안 한 학생";
+    $("#missSub").textContent = "이름을 누르면 그 학생에게 보낼 신청 안내 문구가 복사됩니다.";
+    $("#btnMissCopy").style.display = "";
+    $("#missList").innerHTML = miss.map(n => '<button class="miss-tag" data-copy="' + esc(n) + '">' + esc(n) + '</button>').join("");
+  }
+}
+
 function renderSummary() {
   const today = ymd(new Date());
   const upcoming = rows.filter(r => r["날짜"] >= today).length;
@@ -236,7 +335,7 @@ function renderSummary() {
     + ' · 신청 학생 <b>' + uniq + '명</b>';
 }
 
-function renderAll() { renderWeekNav(); renderGrid(); renderSummary(); }
+function renderAll() { renderWeekNav(); renderGrid(); renderMissing(); renderSummary(); }
 
 // 주차 목록 재구성 (데이터 로드 후)
 function rebuildWeeks() {
@@ -269,7 +368,9 @@ async function load() {
   const btn = $("#btnFetch");
   btn.disabled = true; btn.textContent = "불러오는 중…";
   try {
-    rows = await apiGetAll();
+    const [r1, r2] = await Promise.all([apiGetAll(), loadRoster()]);
+    rows = r1; roster = r2;
+    $("#rosterTa").value = roster.join("\n");
     rebuildWeeks();
     renderAll();
   } catch (e) {
@@ -292,6 +393,30 @@ function unlock() {
 $("#btnUnlock").addEventListener("click", unlock);
 $("#pinInput").addEventListener("keydown", e => { if (e.key === "Enter") unlock(); });
 $("#btnFetch").addEventListener("click", load);
+/* roster + missing events */
+$("#btnRoster").addEventListener("click", () => $("#rosterPanel").classList.toggle("open"));
+$("#btnRosterClose").addEventListener("click", () => $("#rosterPanel").classList.remove("open"));
+$("#btnRosterSave").addEventListener("click", async () => {
+  const list = $("#rosterTa").value.split("\n").map(x => x.trim()).filter(Boolean);
+  const btn = $("#btnRosterSave"); btn.disabled = true; btn.textContent = "저장 중...";
+  try {
+    await saveRoster(list); roster = list;
+    toast(list.length + "명 저장했습니다");
+    $("#rosterPanel").classList.remove("open"); renderAll();
+  } catch (e) { toast("명부 저장에 실패했어요"); }
+  finally { btn.disabled = false; btn.textContent = "명부 저장"; }
+});
+$("#missList").addEventListener("click", e => {
+  const b = e.target.closest("[data-copy]"); if (!b) return;
+  const name = b.getAttribute("data-copy");
+  navigator.clipboard && navigator.clipboard.writeText(missMsg(name)).then(() => toast(name + " 학생 문구 복사됨"));
+});
+$("#btnMissCopy").addEventListener("click", () => {
+  const miss = missingThisWeek();
+  const t = miss.map(n => missMsg(n)).join("\n\n─────\n\n");
+  navigator.clipboard && navigator.clipboard.writeText(t).then(() => toast(miss.length + "명분 문구 복사됨"));
+});
+
 
 $("#grid").addEventListener("click", async e => {
   const b = e.target.closest("[data-del]");

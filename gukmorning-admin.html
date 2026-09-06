@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>국모닝 · 신청 관리</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+  :root {
+    --ink: #1A1A2E; --night: #26365E; --sun: #F5A623; --sun-deep: #E8811C;
+    --sun-bg: #FFF3E0; --cream: #FDFBF6; --surface: #FFFFFF; --border: #ECE6DA;
+    --text-muted: #7A7568; --danger: #C0392B; --danger-bg: #FDECEA;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Pretendard Variable", Pretendard, -apple-system, sans-serif; background: var(--cream); color: var(--ink); padding: 24px; line-height: 1.5; }
+  @media (max-width: 768px) { body { padding: 14px; } }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+  button { font-family: inherit; cursor: pointer; }
+
+  .lock { max-width: 340px; margin: 14vh auto; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 32px 28px; text-align: center; }
+  .lock h1 { font-size: 17px; font-weight: 800; margin-bottom: 6px; }
+  .lock p { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+  .lock input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 16px; text-align: center; letter-spacing: 4px; background: var(--cream); margin-bottom: 12px; }
+  .lock input:focus { outline: none; border-color: var(--sun); background: #fff; }
+  .lock .err { color: var(--danger); font-size: 13px; font-weight: 600; margin-bottom: 12px; display: none; }
+  .lock .btn-go { width: 100%; padding: 14px; border: none; border-radius: 10px; background: var(--night); color: #fff; font-size: 15px; font-weight: 800; }
+
+  .topbar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+  .topbar h1 { font-size: 21px; font-weight: 800; }
+  .topbar .brand { font-size: 12px; color: var(--sun-deep); font-weight: 700; }
+  .spacer { margin-left: auto; display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn { padding: 10px 16px; border-radius: 8px; font-size: 13.5px; font-weight: 700; border: 1px solid var(--border); background: var(--surface); color: var(--ink); }
+  .btn:hover { background: var(--cream); }
+  .btn.primary { background: var(--night); border-color: var(--night); color: #fff; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  .summary { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 18px; margin-bottom: 18px; font-size: 14px; display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
+  .summary b { color: var(--night); }
+
+  #exportArea { background: var(--cream); padding: 6px; border-radius: 18px; }
+  .day-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+  .daycard { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+  .daycard-head { padding: 14px 16px; color: #fff; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, var(--night), #3B4D7A); }
+  .daycard-head.sun { background: linear-gradient(135deg, #7A3B3B, #A65A4A); }
+  .daycard-head .d { font-size: 15.5px; font-weight: 800; }
+  .daycard-head .c { background: rgba(255,255,255,.22); padding: 2px 10px; border-radius: 12px; font-size: 12.5px; font-weight: 700; }
+  .daycard-body { padding: 12px 16px 16px; }
+  .name-tags { display: flex; flex-wrap: wrap; gap: 7px; }
+  .name-tag { background: var(--sun-bg); border: 1px solid #F3D9A8; color: var(--night); padding: 6px 11px; border-radius: 8px; font-size: 13.5px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+  .name-tag .x { border: none; background: none; color: #C9A96B; font-size: 15px; line-height: 1; padding: 0 0 0 2px; }
+  .name-tag .x:hover { color: var(--danger); }
+  .empty { font-size: 13px; color: #B8B2A5; font-style: italic; padding: 4px 0; }
+
+  .toast { position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 12px); background: var(--ink); color: #fff; padding: 12px 20px; border-radius: 999px; font-size: 13.5px; font-weight: 700; opacity: 0; pointer-events: none; transition: .24s; z-index: 90; }
+  .toast.on { opacity: 1; transform: translate(-50%, 0); }
+  .foot { text-align: center; margin-top: 22px; font-size: 12px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<div class="lock" id="lock">
+  <h1>국모닝 관리</h1>
+  <p>비밀번호를 입력해주세요.</p>
+  <div class="err" id="lockErr">비밀번호가 맞지 않습니다.</div>
+  <input type="password" id="pinInput" inputmode="numeric" placeholder="••••" maxlength="16">
+  <button class="btn-go" id="btnUnlock">들어가기</button>
+</div>
+
+<div class="wrap" id="main" style="display:none">
+  <div class="topbar">
+    <div>
+      <div class="brand">이은경국어</div>
+      <h1>국모닝 신청 현황</h1>
+    </div>
+    <div class="spacer">
+      <button class="btn" id="btnExport">명단 이미지 저장</button>
+      <button class="btn primary" id="btnFetch">새로고침</button>
+    </div>
+  </div>
+
+  <div class="summary" id="summary">불러오는 중…</div>
+
+  <div id="exportArea">
+    <div class="day-grid" id="grid"></div>
+  </div>
+
+  <div class="foot">국모닝 · 아침 실전 국어</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════ 설정 ═══════════════ */
+const API_URL   = "PASTE_YOUR_GUKMORNING_EXEC_URL";   // 학생 페이지와 동일한 주소
+const SHEET_TAB = "국모닝";
+const PASSWORD  = "2545";
+const OPEN_DOWS = [6, 0];              // 토, 일
+const LAST_DAY  = "2026-11-15";
+const SHOW_FROM_TODAY = true;          // 지난 날짜는 숨김
+
+/* ═══════════════ 유틸 ═══════════════ */
+const $ = s => document.querySelector(s);
+const DOW = ["일","월","화","수","목","금","토"];
+const pad = n => String(n).padStart(2, "0");
+const ymd = d => d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate());
+const parseYmd = s => { const p = String(s).split("-"); return new Date(+p[0], +p[1]-1, +p[2]); };
+const addDays = (d, n) => { const x = new Date(d.getTime()); x.setDate(x.getDate()+n); return x; };
+const esc = s => String(s||"").replace(/[<>&]/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]));
+const dateLabel = d => (d.getMonth()+1) + "월 " + d.getDate() + "일";
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("on"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("on"),2200); }
+
+/* ═══════════════ API ═══════════════ */
+async function apiGetAll() {
+  const res = await fetch(API_URL + "?sheet=" + encodeURIComponent(SHEET_TAB), { cache: "no-store" });
+  if (!res.ok) throw new Error("조회 실패");
+  const j = await res.json();
+  return Array.isArray(j) ? j : [];
+}
+async function apiDelete(id) {
+  const res = await fetch(API_URL, {
+    method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ action: "delete", sheet: SHEET_TAB, id: id })
+  });
+  if (!res.ok) throw new Error("삭제 실패");
+  const j = await res.json(); if (j.error) throw new Error("삭제 실패"); return j;
+}
+
+/* ═══════════════ 상태 ═══════════════ */
+let rows = [];
+
+/* 열리는 모든 토·일 날짜 목록 (오늘~마지막날) */
+function openDates() {
+  const out = [];
+  let d = new Date(); d.setHours(0,0,0,0);
+  const start = SHOW_FROM_TODAY ? d : parseYmd(ymd(d));
+  let cur = new Date(start);
+  const end = parseYmd(LAST_DAY);
+  // 과거 신청도 보이게 하려면 4주 전부터
+  if (!SHOW_FROM_TODAY) cur = addDays(cur, -28);
+  while (cur <= end) {
+    if (OPEN_DOWS.indexOf(cur.getDay()) >= 0) out.push(ymd(cur));
+    cur = addDays(cur, 1);
+  }
+  return out;
+}
+
+function renderGrid() {
+  const dates = openDates();
+  const byDate = {};
+  rows.forEach(r => { (byDate[r["날짜"]] = byDate[r["날짜"]] || []).push(r); });
+
+  // 신청이 있는데 목록 범위 밖(지난 날짜)인 것도 포함
+  Object.keys(byDate).forEach(d => { if (dates.indexOf(d) < 0) dates.push(d); });
+  dates.sort();
+
+  const today = ymd(new Date());
+  $("#grid").innerHTML = dates.map(ds => {
+    const d = parseYmd(ds);
+    const isSun = d.getDay() === 0;
+    const list = (byDate[ds] || []).slice().sort((a,b) => (a["이름"]||"").localeCompare(b["이름"]||"", "ko"));
+    const past = ds < today;
+    const tags = list.length
+      ? list.map(r => '<span class="name-tag">' + esc(r["이름"])
+          + '<button class="x" data-del="' + esc(r["id"]) + '" title="취소">×</button></span>').join("")
+      : '<div class="empty">아직 신청 없음</div>';
+    return '<div class="daycard"' + (past ? ' style="opacity:.55"' : '') + '>'
+      + '<div class="daycard-head' + (isSun ? ' sun' : '') + '">'
+      + '<span class="d">' + dateLabel(d) + ' (' + DOW[d.getDay()] + ')</span>'
+      + '<span class="c">' + list.length + '명</span></div>'
+      + '<div class="daycard-body"><div class="name-tags">' + tags + '</div></div></div>';
+  }).join("");
+}
+
+function renderSummary() {
+  const today = ymd(new Date());
+  const upcoming = rows.filter(r => r["날짜"] >= today).length;
+  const uniq = new Set(rows.map(r => (r["이름"]||"").trim())).size;
+  $("#summary").innerHTML = '앞으로 신청 <b>' + upcoming + '건</b>'
+    + ' · 전체 <b>' + rows.length + '건</b>'
+    + ' · 신청 학생 <b>' + uniq + '명</b>';
+}
+
+function renderAll() { renderGrid(); renderSummary(); }
+
+/* ═══════════════ 로드 ═══════════════ */
+async function load() {
+  const btn = $("#btnFetch");
+  btn.disabled = true; btn.textContent = "불러오는 중…";
+  try {
+    rows = await apiGetAll();
+    renderAll();
+  } catch (e) {
+    toast("불러오지 못했습니다. 잠시 후 다시 시도해주세요.");
+  } finally {
+    btn.disabled = false; btn.textContent = "새로고침";
+  }
+}
+
+/* ═══════════════ 이벤트 ═══════════════ */
+function unlock() {
+  const v = $("#pinInput").value.trim();
+  if (v !== PASSWORD) { $("#lockErr").style.display = "block"; $("#pinInput").value = ""; sessionStorage.removeItem("gm_pw"); return; }
+  sessionStorage.setItem("gm_pw", v);
+  $("#lock").style.display = "none";
+  $("#main").style.display = "block";
+  load();
+}
+$("#btnUnlock").addEventListener("click", unlock);
+$("#pinInput").addEventListener("keydown", e => { if (e.key === "Enter") unlock(); });
+$("#btnFetch").addEventListener("click", load);
+
+$("#grid").addEventListener("click", async e => {
+  const b = e.target.closest("[data-del]");
+  if (!b) return;
+  if (!confirm("이 학생의 신청을 취소할까요?")) return;
+  try { await apiDelete(b.getAttribute("data-del")); toast("취소했습니다"); load(); }
+  catch (err) { toast("취소하지 못했습니다"); }
+});
+
+$("#btnExport").addEventListener("click", function () {
+  const area = $("#exportArea"), btn = this, orig = btn.textContent;
+  btn.textContent = "저장 중…"; btn.disabled = true;
+  document.querySelectorAll(".name-tag .x").forEach(x => x.style.display = "none");
+  html2canvas(area, { scale: 2, backgroundColor: "#FDFBF6", useCORS: true }).then(canvas => {
+    const a = document.createElement("a");
+    a.download = "국모닝_신청명단_" + ymd(new Date()) + ".png";
+    a.href = canvas.toDataURL("image/png"); a.click();
+  }).catch(() => toast("이미지를 저장하지 못했습니다"))
+    .then(() => { document.querySelectorAll(".name-tag .x").forEach(x => x.style.display = ""); btn.textContent = orig; btn.disabled = false; });
+});
+
+/* 세션 유지 */
+(function boot() {
+  const saved = sessionStorage.getItem("gm_pw");
+  if (saved) { $("#pinInput").value = saved; unlock(); }
+  else $("#pinInput").focus();
+})();
+</script>
+</body>
+</html>

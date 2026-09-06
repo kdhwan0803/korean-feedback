@@ -39,7 +39,15 @@
   .summary b { color: var(--night); }
 
   #exportArea { background: var(--cream); padding: 6px; border-radius: 18px; }
-  .day-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+  .weeknav { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .weeknav button.arrow { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); font-size: 16px; color: var(--night); font-weight: 800; display: flex; align-items: center; justify-content: center; }
+  .weeknav button.arrow:disabled { color: #D8D2C6; cursor: not-allowed; }
+  .weeknav .label { flex: 1; text-align: center; }
+  .weeknav .label .wk { font-size: 16px; font-weight: 800; color: var(--night); }
+  .weeknav .label .rng { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
+  .weeknav .today-btn { padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); font-size: 12.5px; font-weight: 700; color: var(--text-muted); }
+  .day-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 640px){ .day-grid { grid-template-columns: 1fr; } }
   .daycard { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
   .daycard-head { padding: 14px 16px; color: #fff; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, var(--night), #3B4D7A); }
   .daycard-head.sun { background: linear-gradient(135deg, #7A3B3B, #A65A4A); }
@@ -79,6 +87,12 @@
     </div>
   </div>
 
+  <div class="weeknav" id="weeknav" style="display:none">
+    <button class="arrow" id="wkPrev">◀</button>
+    <div class="label"><div class="wk" id="wkLabel">-</div><div class="rng" id="wkRange"></div></div>
+    <button class="arrow" id="wkNext">▶</button>
+    <button class="today-btn" id="wkToday">이번 주</button>
+  </div>
   <div class="summary" id="summary">불러오는 중…</div>
 
   <div id="exportArea">
@@ -98,7 +112,6 @@ const PASSWORD  = "2545";
 const OPEN_DOWS = [6, 0];              // 토, 일
 const CAP_BY_DOW = { 6: 5, 0: 7 };     // 토 5명, 일 7명
 const LAST_DAY  = "2026-11-15";
-const SHOW_FROM_TODAY = true;          // 지난 날짜는 숨김
 
 /* ═══════════════ 유틸 ═══════════════ */
 const $ = s => document.querySelector(s);
@@ -131,44 +144,85 @@ async function apiDelete(id) {
 let rows = [];
 
 /* 열리는 모든 토·일 날짜 목록 (오늘~마지막날) */
-function openDates() {
-  const out = [];
-  let d = new Date(); d.setHours(0,0,0,0);
-  const start = SHOW_FROM_TODAY ? d : parseYmd(ymd(d));
-  let cur = new Date(start);
+// 이번 주 월요일 기준
+function mondayOf(d) {
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const w = x.getDay();
+  return addDays(x, w === 0 ? -6 : 1 - w);
+}
+// 신청이 열리는 전체 주(월요일 목록) — 오늘 주 ~ 마지막 주말
+function weekList() {
+  const weeks = [];
+  let mon = mondayOf(new Date());
   const end = parseYmd(LAST_DAY);
-  // 과거 신청도 보이게 하려면 4주 전부터
-  if (!SHOW_FROM_TODAY) cur = addDays(cur, -28);
-  while (cur <= end) {
-    if (OPEN_DOWS.indexOf(cur.getDay()) >= 0) out.push(ymd(cur));
-    cur = addDays(cur, 1);
+  while (mon <= end) { weeks.push(ymd(mon)); mon = addDays(mon, 7); }
+  // 지난 신청이 있으면 그 주도 앞에 포함
+  const minBooking = rows.map(r => r["\ub0a0\uc9dc"]).sort()[0];
+  if (minBooking) {
+    let bm = mondayOf(parseYmd(minBooking));
+    while (ymd(bm) < weeks[0]) { weeks.unshift(ymd(bm)); bm = addDays(bm, 7); break; }
+    // 여러 주 지났을 수 있으니 채워넣기
+    bm = mondayOf(parseYmd(minBooking));
+    const filled = [];
+    let c = bm;
+    while (ymd(c) < weeks[0]) { filled.push(ymd(c)); c = addDays(c, 7); }
+    weeks.unshift(...filled);
   }
-  return out;
+  return weeks.length ? weeks : [ymd(mondayOf(new Date()))];
+}
+
+let weeks = [], curWeek = "";
+
+function renderWeekNav() {
+  const mon = parseYmd(curWeek), sun = addDays(mon, 6);
+  const idx = weeks.indexOf(curWeek);
+  const thisWeek = ymd(mondayOf(new Date()));
+  let name;
+  const diff = Math.round((mon - parseYmd(thisWeek)) / (7*86400000));
+  if (diff === 0) name = "이번 주";
+  else if (diff === 1) name = "다음 주";
+  else if (diff === -1) name = "지난 주";
+  else if (diff > 1) name = diff + "주 뒤";
+  else name = Math.abs(diff) + "주 전";
+  $("#wkLabel").textContent = name;
+  $("#wkRange").textContent = (mon.getMonth()+1) + "/" + mon.getDate() + " ~ " + (sun.getMonth()+1) + "/" + sun.getDate();
+  $("#wkPrev").disabled = idx <= 0;
+  $("#wkNext").disabled = idx >= weeks.length - 1;
+  $("#weeknav").style.display = "flex";
+}
+
+// 그 주의 토·일 날짜만
+function weekDates() {
+  const mon = parseYmd(curWeek);
+  const out = [];
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(mon, i);
+    if (OPEN_DOWS.indexOf(d.getDay()) >= 0) out.push(ymd(d));
+  }
+  return out.sort();
 }
 
 function renderGrid() {
-  const dates = openDates();
   const byDate = {};
-  rows.forEach(r => { (byDate[r["날짜"]] = byDate[r["날짜"]] || []).push(r); });
-
-  // 신청이 있는데 목록 범위 밖(지난 날짜)인 것도 포함
-  Object.keys(byDate).forEach(d => { if (dates.indexOf(d) < 0) dates.push(d); });
-  dates.sort();
-
+  rows.forEach(r => { (byDate[r["\ub0a0\uc9dc"]] = byDate[r["\ub0a0\uc9dc"]] || []).push(r); });
+  const dates = weekDates();
   const today = ymd(new Date());
+
   $("#grid").innerHTML = dates.map(ds => {
     const d = parseYmd(ds);
     const isSun = d.getDay() === 0;
-    const list = (byDate[ds] || []).slice().sort((a,b) => (a["이름"]||"").localeCompare(b["이름"]||"", "ko"));
+    const cap = CAP_BY_DOW[d.getDay()] || 0;
+    const list = (byDate[ds] || []).slice().sort((a,b) => (a["\uc774\ub984"]||"").localeCompare(b["\uc774\ub984"]||"", "ko"));
     const past = ds < today;
+    const full = list.length >= cap;
     const tags = list.length
-      ? list.map(r => '<span class="name-tag">' + esc(r["이름"])
+      ? list.map((r, i) => '<span class="name-tag"><span style="color:var(--text-muted);font-size:11px;margin-right:2px">' + (i+1) + '</span>' + esc(r["\uc774\ub984"])
           + '<button class="x" data-del="' + esc(r["id"]) + '" title="취소">×</button></span>').join("")
       : '<div class="empty">아직 신청 없음</div>';
-    return '<div class="daycard"' + (past ? ' style="opacity:.55"' : '') + '>'
+    return '<div class="daycard"' + (past ? ' style="opacity:.6"' : '') + '>'
       + '<div class="daycard-head' + (isSun ? ' sun' : '') + '">'
       + '<span class="d">' + dateLabel(d) + ' (' + DOW[d.getDay()] + ')</span>'
-      + '<span class="c">' + list.length + ' / ' + (CAP_BY_DOW[d.getDay()] || 0) + '명</span></div>'
+      + '<span class="c"' + (full ? ' style="background:rgba(255,255,255,.38)"' : '') + '>' + list.length + ' / ' + cap + '명</span></div>'
       + '<div class="daycard-body"><div class="name-tags">' + tags + '</div></div></div>';
   }).join("");
 }
@@ -182,7 +236,33 @@ function renderSummary() {
     + ' · 신청 학생 <b>' + uniq + '명</b>';
 }
 
-function renderAll() { renderGrid(); renderSummary(); }
+function renderAll() { renderWeekNav(); renderGrid(); renderSummary(); }
+
+// 주차 목록 재구성 (데이터 로드 후)
+function rebuildWeeks() {
+  weeks = weekList();
+  const thisWeek = ymd(mondayOf(new Date()));
+  if (!curWeek || weeks.indexOf(curWeek) < 0) {
+    curWeek = weeks.indexOf(thisWeek) >= 0 ? thisWeek : weeks[0];
+  }
+}
+
+// 주차 이동 이벤트
+document.addEventListener("DOMContentLoaded", () => {});
+let _navBound = false;
+function bindWeekNav() {
+  if (_navBound) return; _navBound = true;
+  $("#wkPrev").addEventListener("click", () => {
+    const i = weeks.indexOf(curWeek); if (i > 0) { curWeek = weeks[i-1]; renderAll(); }
+  });
+  $("#wkNext").addEventListener("click", () => {
+    const i = weeks.indexOf(curWeek); if (i < weeks.length-1) { curWeek = weeks[i+1]; renderAll(); }
+  });
+  $("#wkToday").addEventListener("click", () => {
+    const t = ymd(mondayOf(new Date()));
+    curWeek = weeks.indexOf(t) >= 0 ? t : weeks[0]; renderAll();
+  });
+}
 
 /* ═══════════════ 로드 ═══════════════ */
 async function load() {
@@ -190,6 +270,7 @@ async function load() {
   btn.disabled = true; btn.textContent = "불러오는 중…";
   try {
     rows = await apiGetAll();
+    rebuildWeeks();
     renderAll();
   } catch (e) {
     toast("불러오지 못했습니다. 잠시 후 다시 시도해주세요.");
@@ -205,6 +286,7 @@ function unlock() {
   sessionStorage.setItem("gm_pw", v);
   $("#lock").style.display = "none";
   $("#main").style.display = "block";
+  bindWeekNav();
   load();
 }
 $("#btnUnlock").addEventListener("click", unlock);

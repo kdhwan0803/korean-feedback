@@ -516,8 +516,7 @@ $("#btnSubmit").addEventListener("click", async () => {
   showErr($("#errSubmit"), ""); showErr($("#err1"), "");
 
   try {
-    await load();  // 최신 상태로 중복 확인
-
+    // 이미 불러온 현황(rows)으로 바로 확인 — 저장 전 재조회를 없애 속도를 높입니다
     const dup = myFuture(p);
     if (dup) { submitting = false; showMy(dup); return; }
     if (leftOn(selDate) <= 0) {

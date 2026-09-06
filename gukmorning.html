@@ -115,7 +115,38 @@
   .ticket-row span:last-child { font-weight: 800; text-align: right; color: var(--night); }
 
   .alert { padding: 12px 14px; border-radius: 10px; font-size: 13.5px; font-weight: 600; margin-bottom: 14px; display: none; text-align: left; background: #FDECEA; color: var(--danger); border: 1px solid #F5C6C0; }
-  .loading { text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 14px; }
+  .loading { text-align: center; padding: 80px 20px 90px; }
+  .sunrise { position: relative; width: 140px; height: 90px; margin: 0 auto 22px; overflow: hidden; }
+  .sunrise .sun { position: absolute; left: 50%; bottom: 0; width: 56px; height: 56px; margin-left: -28px;
+    border-radius: 50%; background: radial-gradient(circle at 50% 40%, #FFD873 0%, var(--sun) 45%, var(--sun-deep) 100%);
+    box-shadow: 0 0 30px 8px rgba(245,166,35,.45);
+    animation: rise 1.9s ease-in-out infinite; }
+  .sunrise .horizon { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--border); }
+  .sunrise .ray { position: absolute; left: 50%; bottom: 14px; width: 2px; height: 12px; margin-left: -1px;
+    background: var(--sun); border-radius: 2px; opacity: 0; transform-origin: 50% 34px;
+    animation: shine 1.9s ease-in-out infinite; }
+  .sunrise .ray:nth-child(1){ transform: rotate(-40deg); animation-delay: .1s; }
+  .sunrise .ray:nth-child(2){ transform: rotate(-20deg); animation-delay: .16s; }
+  .sunrise .ray:nth-child(3){ transform: rotate(0deg);   animation-delay: .22s; }
+  .sunrise .ray:nth-child(4){ transform: rotate(20deg);  animation-delay: .16s; }
+  .sunrise .ray:nth-child(5){ transform: rotate(40deg);  animation-delay: .1s; }
+  @keyframes rise {
+    0%   { bottom: -46px; }
+    45%  { bottom: 10px; }
+    55%  { bottom: 10px; }
+    100% { bottom: -46px; }
+  }
+  @keyframes shine {
+    0%,40% { opacity: 0; }
+    55%    { opacity: .85; }
+    75%,100% { opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sunrise .sun { animation: none; bottom: 8px; }
+    .sunrise .ray { animation: none; opacity: .7; }
+  }
+  .loading .msg { font-size: 14.5px; color: var(--night); font-weight: 700; }
+  .loading .sub { font-size: 12.5px; color: var(--text-muted); margin-top: 5px; }
 </style>
 </head>
 <body>
@@ -127,7 +158,16 @@
     <div class="tag">수능 1교시 그 시간, 아침 8시 30분.<br>실전처럼 국어 모의고사를 풉니다.</div>
   </header>
 
-  <div class="loading" id="boot">불러오는 중…</div>
+  <div class="loading" id="boot">
+    <div class="sunrise">
+      <span class="ray"></span><span class="ray"></span><span class="ray"></span>
+      <span class="ray"></span><span class="ray"></span>
+      <div class="sun"></div>
+      <div class="horizon"></div>
+    </div>
+    <div class="msg">국모닝, 좋은 아침입니다</div>
+    <div class="sub">신청 현황을 불러오는 중…</div>
+  </div>
 
   <!-- 이미 신청함 -->
   <div class="screen" id="screenMy">

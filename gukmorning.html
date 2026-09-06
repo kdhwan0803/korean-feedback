@@ -349,6 +349,11 @@ function revealPicked() {
 }
 
 /* ═══════════════ 카카오톡 저장 ═══════════════ */
+// 카톡 '내 신청 확인하기' 링크 — 이름을 실어 어느 브라우저에서든 신청을 찾게 함
+function myLink(name) {
+  const base = location.href.split("?")[0].split("#")[0];
+  return base + "?name=" + encodeURIComponent(name);
+}
 function sendKakao(info) {
   if (!window.Kakao) { alert("카카오 기능을 불러올 수 없습니다. 광고 차단기를 끄고 새로고침 해주세요."); return; }
   if (!Kakao.isInitialized()) {
@@ -361,7 +366,7 @@ function sendKakao(info) {
       text: "[국모닝 신청]\n\n" + info.name + " 학생\n"
           + dateLabel(parseYmd(info.date)) + " · 오전 8:30 입실\n\n"
           + "실제 수능처럼, 늦지 않게 오세요!",
-      link: { mobileWebUrl: location.href, webUrl: location.href },
+      link: { mobileWebUrl: myLink(info.name), webUrl: myLink(info.name) },
       buttonTitle: "내 신청 확인하기"
     });
   } catch (error) {
@@ -540,8 +545,12 @@ function applySuggestion() {
   rangeFromM = monthNum(now);
   rangeToM   = monthNum(parseYmd(LAST_DAY));
 
+  // 카톡 링크로 들어온 경우 ?name= 을 먼저 사용, 없으면 이 브라우저에 저장된 이름
   let savedName = "";
-  try { savedName = localStorage.getItem("gm_name") || ""; } catch(e) {}
+  try {
+    const urlName = new URLSearchParams(location.search).get("name");
+    savedName = (urlName && urlName.trim()) || localStorage.getItem("gm_name") || "";
+  } catch(e) {}
   if (savedName) $("#fName").value = savedName;
 
   show("form");

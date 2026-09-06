@@ -85,6 +85,9 @@
   .cal-day.open { background: var(--cream); border-color: var(--border); cursor: pointer; }
   .cal-day.open .n { color: var(--ink); font-weight: 700; }
   .cal-day.open .s { color: var(--sun-deep); }
+  .cal-day.warn.open .s { color: var(--danger); }
+  .cal-day.full { background: var(--cream); border: 1px dashed var(--border); }
+  .cal-day.full .n, .cal-day.full .s { color: #B8B2A5; }
   .cal-day.selected { background: var(--sun); border-color: var(--sun-deep); }
   .cal-day.selected .n, .cal-day.selected .s { color: var(--night); }
   .cal-note { font-size: 12.5px; color: var(--text-muted); margin-top: 16px; text-align: center; line-height: 1.6; }
@@ -204,8 +207,10 @@
           <div class="v big-time"><span class="t">오전 8:30</span><span class="u">까지 등원 · 10:30 종료 (모의고사 + 1:1 상담)</span></div>
         </div>
         <div class="nblock">
-          <div class="k">진행 요일</div>
-          <div class="v">매주 <b>토요일 · 일요일</b> 중 원하는 하루<span style="color:var(--text-muted)"> — 수능 전 주말까지</span></div>
+          <div class="k">진행 요일 · 정원</div>
+          <div class="v">매주 <b>토요일 · 일요일</b> 중 원하는 하루<span style="color:var(--text-muted)"> — 수능 전 주말까지</span>
+            <div style="margin-top:8px;font-size:13px;color:var(--text-muted)">정원은 <b style="color:var(--night)">토요일 5명 · 일요일 7명</b>, 선착순 마감입니다.</div>
+          </div>
         </div>
         <div class="nblock">
           <div class="k">꼭 지켜주세요</div>
@@ -271,6 +276,7 @@ try { Kakao.init(KAKAO_KEY); } catch (e) { console.log("카카오 SDK 미로드 
 
 const ENTER_TIME = "08:30";        // 입실 시간
 const OPEN_DOWS  = [6, 0];         // 열리는 요일: 토(6), 일(0)
+const CAP_BY_DOW = { 6: 5, 0: 7 };  // 요일별 정원: 토 5명, 일 7명
 const LAST_DAY   = "2026-11-15";   // 신청 가능한 마지막 날짜(이 날까지 포함). 수능 11/19 직전 주말.
 const CUTOFF_HOURS = 10;           // 당일 몇 시간 전까지 신청/변경 허용 (전날 밤 대비 넉넉히)
 
@@ -323,12 +329,21 @@ const me = () => ({ name: $("#fName").value.trim() });
 const sameAs = (r, p) => String(r["이름"] || "").trim() === p.name;
 
 /* 날짜가 열려 있는지: 토/일 + 범위 안 + 마감시간 전 */
-function dayOpen(dateStr) {
+const capOfDate = ds => CAP_BY_DOW[parseYmd(ds).getDay()] || 0;
+const takenOn   = ds => rows.filter(r => r["날짜"] === ds).length;
+const leftOn    = ds => capOfDate(ds) - takenOn(ds);
+
+// 달력에 열리는 조건: 요일·기간·마감시간 (자리 여부는 별도)
+function dayInRange(dateStr) {
   const d = parseYmd(dateStr);
   if (OPEN_DOWS.indexOf(d.getDay()) < 0) return false;
   if (dateStr > LAST_DAY) return false;
   if (Date.now() > enterAt(dateStr).getTime() - CUTOFF_HOURS*3600000) return false;
   return true;
+}
+// 실제 신청 가능: 위 조건 + 남은 자리
+function dayOpen(dateStr) {
+  return dayInRange(dateStr) && leftOn(dateStr) > 0;
 }
 
 /* ═══════════════ 달력 ═══════════════ */
@@ -350,9 +365,14 @@ function renderCalendar() {
   for (let i = 0; i < lead; i++) h += '<div class="cal-day"></div>';
   for (let i = 1; i <= last; i++) {
     const ds = ymd(new Date(y, m, i));
-    const open = dayOpen(ds);
+    const inRange = dayInRange(ds);
+    const left = leftOn(ds);
+    const open = inRange && left > 0;
     let cls = "cal-day", label = "";
-    if (open) { cls += " open"; label = DOW[parseYmd(ds).getDay()] + "요일"; }
+    if (inRange) {
+      if (open) { cls += " open"; label = left + "자리"; if (left <= 2) cls += " warn"; }
+      else { cls += " full"; label = "마감"; }
+    }
     if (ds === selDate) cls += " selected";
     h += '<button type="button" class="' + cls + '"' + (open ? "" : " disabled") + ' data-date="' + ds + '">'
        + '<span class="n">' + i + '</span><span class="s">' + label + '</span></button>';
@@ -500,6 +520,10 @@ $("#btnSubmit").addEventListener("click", async () => {
 
     const dup = myFuture(p);
     if (dup) { submitting = false; showMy(dup); return; }
+    if (leftOn(selDate) <= 0) {
+      renderCalendar();
+      throw new Error("방금 이 날짜 자리가 참습니다. 다른 날짜를 골라주세요.");
+    }
 
     const row = {
       "id": "G" + Date.now().toString(36) + Math.floor(Math.random()*900+100),

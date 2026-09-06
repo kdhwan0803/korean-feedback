@@ -92,10 +92,11 @@
 
 <script>
 /* ═══════════════ 설정 ═══════════════ */
-const API_URL   = "PASTE_YOUR_GUKMORNING_EXEC_URL";   // 학생 페이지와 동일한 주소
+const API_URL   = "https://script.google.com/macros/s/AKfycbwUYZ1J5xgTcVFjg1A5lAng35OZ6CM5qY_ww8ewQzbjW9_sEwDXUTLz4yG2iL1hlVcI/exec";   // 학생 페이지와 동일한 주소
 const SHEET_TAB = "국모닝";
 const PASSWORD  = "2545";
 const OPEN_DOWS = [6, 0];              // 토, 일
+const CAP_BY_DOW = { 6: 5, 0: 7 };     // 토 5명, 일 7명
 const LAST_DAY  = "2026-11-15";
 const SHOW_FROM_TODAY = true;          // 지난 날짜는 숨김
 
@@ -167,7 +168,7 @@ function renderGrid() {
     return '<div class="daycard"' + (past ? ' style="opacity:.55"' : '') + '>'
       + '<div class="daycard-head' + (isSun ? ' sun' : '') + '">'
       + '<span class="d">' + dateLabel(d) + ' (' + DOW[d.getDay()] + ')</span>'
-      + '<span class="c">' + list.length + '명</span></div>'
+      + '<span class="c">' + list.length + ' / ' + (CAP_BY_DOW[d.getDay()] || 0) + '명</span></div>'
       + '<div class="daycard-body"><div class="name-tags">' + tags + '</div></div></div>';
   }).join("");
 }
